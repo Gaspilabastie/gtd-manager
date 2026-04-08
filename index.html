@@ -937,6 +937,29 @@
       color: var(--accent-dark);
     }
 
+    .pomo-time-input {
+      display: none;
+      font-family: var(--mono);
+      font-size: 80px;
+      font-weight: 700;
+      letter-spacing: -4px;
+      line-height: 1;
+      margin-bottom: 8px;
+      width: 4ch;
+      text-align: center;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--accent);
+      color: inherit;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    .pomo-time-input::-webkit-outer-spin-button,
+    .pomo-time-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
     .pomo-task-link {
       font-family: var(--mono);
       font-size: 10px;
@@ -1338,21 +1361,23 @@
   <!-- POMODORO Section -->
   <div class="pomo-container" id="pomo-container">
     <div class="pomo-phase-bar" id="pomo-phases">
-      <button class="active" data-phase="0">1</button>
-      <button data-phase="1">—</button>
-      <button data-phase="2">2</button>
-      <button data-phase="3">—</button>
-      <button data-phase="4">3</button>
-      <button data-phase="5">—</button>
-      <button data-phase="6">4</button>
-      <button data-phase="7">~~</button>
+      <button class="active" data-phase="0" onclick="jumpToPhase(0)">1</button>
+      <button data-phase="1" onclick="jumpToPhase(1)">—</button>
+      <button data-phase="2" onclick="jumpToPhase(2)">2</button>
+      <button data-phase="3" onclick="jumpToPhase(3)">—</button>
+      <button data-phase="4" onclick="jumpToPhase(4)">3</button>
+      <button data-phase="5" onclick="jumpToPhase(5)">—</button>
+      <button data-phase="6" onclick="jumpToPhase(6)">4</button>
+      <button data-phase="7" onclick="jumpToPhase(7)">~~</button>
     </div>
     <div class="pomo-progress">
       <div class="pomo-progress-fill" id="pomo-progress-fill"></div>
     </div>
     <div class="pomo-timer-wrap">
       <div class="pomo-label" id="pomo-label">Enfoque</div>
-      <div class="pomo-time" id="pomo-time">25:00</div>
+      <div class="pomo-time" id="pomo-time" onclick="editPomoTime()">25:00</div>
+      <input type="number" class="pomo-time-input" id="pomo-time-input" min="1" max="999" inputmode="numeric"
+        onblur="confirmPomoTime()" onkeydown="if(event.key==='Enter')this.blur()">
       <div class="pomo-task-link" id="pomo-task-link" onclick="pickPomoTask()">
         Vincular tarea...
       </div>
@@ -2877,6 +2902,7 @@
     function startPomo() {
       pomoState.running = true;
       pomoState.startedAt = Date.now();
+      pomoState.remainingAtStart = pomoState.remaining;
       // Save start state for recovery
       localStorage.setItem('gtd-pomo-state', JSON.stringify({
         phase: pomoState.phase,
@@ -2887,12 +2913,90 @@
       }));
 
       pomoState.interval = setInterval(() => {
-        pomoState.remaining--;
-        if (pomoState.remaining <= 0) {
-          onPhaseComplete();
-        }
-        updatePomoDisplay();
+        pomoTickUpdate();
       }, 1000);
+      updatePomoDisplay();
+    }
+
+    function pomoTickUpdate() {
+      const elapsed = Math.floor((Date.now() - pomoState.startedAt) / 1000);
+      pomoState.remaining = Math.max(0, pomoState.remainingAtStart - elapsed);
+      if (pomoState.remaining <= 0) {
+        onPhaseComplete();
+      }
+      updatePomoDisplay();
+    }
+
+    function pomoCatchUp() {
+      const elapsed = Math.floor((Date.now() - pomoState.startedAt) / 1000);
+      if (elapsed < pomoState.remainingAtStart) {
+        // Still within current phase, normal tick update
+        pomoTickUpdate();
+        return;
+      }
+      // Phase completed while away — count only this one, then pause
+      clearInterval(pomoState.interval);
+      pomoState.interval = null;
+      pomoState.running = false;
+
+      const completedPhase = POMO_PHASES[pomoState.phase];
+      if (completedPhase.type === 'work') {
+        const stats = getPomoStats();
+        stats.count++;
+        stats.totalMin += getPomoSettings().work;
+        savePomoStats(stats);
+      }
+
+      // Notify
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      if (Notification.permission === 'granted') {
+        const msg = completedPhase.type === 'work' ? 'Pomodoro terminado. Descansa!' : 'Break terminado. A trabajar!';
+        new Notification('GTD Manager', { body: msg });
+      }
+
+      // Advance to next phase and pause there
+      pomoState.phase = (pomoState.phase + 1) % POMO_PHASES.length;
+      pomoState.remaining = getPhaseDuration(pomoState.phase);
+      pomoState.total = pomoState.remaining;
+      localStorage.removeItem('gtd-pomo-state');
+      updatePomoDisplay();
+    }
+
+    function editPomoTime() {
+      if (pomoState.running) return;
+      const display = document.getElementById('pomo-time');
+      const input = document.getElementById('pomo-time-input');
+      input.value = Math.ceil(pomoState.remaining / 60);
+      display.style.display = 'none';
+      input.style.display = 'block';
+      input.focus();
+      input.select();
+    }
+
+    function confirmPomoTime() {
+      const display = document.getElementById('pomo-time');
+      const input = document.getElementById('pomo-time-input');
+      const mins = parseInt(input.value);
+      if (mins > 0) {
+        pomoState.remaining = mins * 60;
+        pomoState.total = mins * 60;
+      }
+      input.style.display = 'none';
+      display.style.display = '';
+      updatePomoDisplay();
+    }
+
+    function jumpToPhase(phaseIndex) {
+      // Stop current timer if running
+      if (pomoState.interval) {
+        clearInterval(pomoState.interval);
+        pomoState.interval = null;
+      }
+      pomoState.running = false;
+      pomoState.phase = phaseIndex;
+      pomoState.remaining = getPhaseDuration(phaseIndex);
+      pomoState.total = pomoState.remaining;
+      localStorage.removeItem('gtd-pomo-state');
       updatePomoDisplay();
     }
 
@@ -2972,28 +3076,40 @@
       const saved = localStorage.getItem('gtd-pomo-state');
       if (!saved) return;
       const state = JSON.parse(saved);
-      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
-      const remaining = state.remaining - elapsed;
-      if (remaining > 0) {
-        pomoState.phase = state.phase;
-        pomoState.remaining = remaining;
-        pomoState.total = state.total;
-        pomoState.linkedTask = state.linkedTask;
-        if (state.linkedTask) {
-          const task = allTasks.find(t => t.id === state.linkedTask);
-          if (task) {
-            const link = document.getElementById('pomo-task-link');
-            link.textContent = task.fields.Title;
-            link.classList.add('linked');
-          }
+
+      pomoState.phase = state.phase;
+      pomoState.remaining = state.remaining;
+      pomoState.remainingAtStart = state.remaining;
+      pomoState.total = state.total;
+      pomoState.startedAt = state.startedAt;
+      pomoState.linkedTask = state.linkedTask;
+      pomoState.running = true;
+
+      if (state.linkedTask) {
+        const task = allTasks.find(t => t.id === state.linkedTask);
+        if (task) {
+          const link = document.getElementById('pomo-task-link');
+          link.textContent = task.fields.Title;
+          link.classList.add('linked');
         }
-        startPomo();
+      }
+
+      // Check if phase elapsed while away, otherwise resume normally
+      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+      if (elapsed >= state.remaining) {
+        pomoCatchUp();
       } else {
-        // Phase completed while away
-        pomoState.phase = state.phase;
-        onPhaseComplete();
+        pomoState.interval = setInterval(() => { pomoTickUpdate(); }, 1000);
+        updatePomoDisplay();
       }
     }
+
+    // Recalculate timer when returning from background/lock screen
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && pomoState.running) {
+        pomoCatchUp();
+      }
+    });
 
     // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
