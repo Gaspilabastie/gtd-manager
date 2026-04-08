@@ -1085,6 +1085,42 @@
       font-weight: 700;
     }
 
+    .tag-deadline.asap {
+      color: var(--danger);
+      font-weight: 700;
+      letter-spacing: 1.5px;
+    }
+
+    .deadline-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .deadline-row input[type="date"] {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .btn-asap {
+      padding: 0 14px;
+      background: var(--surface);
+      border: 2px solid var(--black);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-asap.active {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
     /* === OFFLINE INDICATOR === */
     .offline-bar {
       display: none;
@@ -1351,7 +1387,10 @@
           <option value="">Sin proyecto</option>
         </select>
         <div class="field-label">Deadline</div>
-        <input type="date" id="input-deadline">
+        <div class="deadline-row">
+          <input type="date" id="input-deadline">
+          <button type="button" class="btn-asap" onclick="toggleAsap('input-deadline', this)">ASAP</button>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal('modal-add')">Cancelar</button>
@@ -1380,7 +1419,10 @@
         <option value="">Sin proyecto</option>
       </select>
       <div class="field-label">Deadline</div>
-      <input type="date" id="process-deadline">
+      <div class="deadline-row" style="margin-bottom:10px;">
+        <input type="date" id="process-deadline">
+        <button type="button" class="btn-asap" onclick="toggleAsap('process-deadline', this)">ASAP</button>
+      </div>
       <div class="btn-row">
         <button class="btn-danger" onclick="discardInbox()">Descartar</button>
         <button class="btn-add" id="btn-process" onclick="confirmProcess()">Mover</button>
@@ -1408,7 +1450,10 @@
         <option value="">Sin proyecto</option>
       </select>
       <div class="field-label">Deadline</div>
-      <input type="date" id="detail-deadline">
+      <div class="deadline-row" style="margin-bottom:10px;">
+        <input type="date" id="detail-deadline">
+        <button type="button" class="btn-asap" id="detail-asap-btn" onclick="toggleAsap('detail-deadline', this)">ASAP</button>
+      </div>
       <div class="btn-row">
         <button class="btn-danger" onclick="deleteTask()">Eliminar</button>
         <button class="btn-add" id="btn-detail-save" onclick="saveTaskDetail()">Guardar</button>
@@ -1711,8 +1756,13 @@
     }
 
     // === DEADLINE ===
+    const ASAP_DATE = '1970-01-01';
+
+    function isAsap(iso) { return iso === ASAP_DATE; }
+
     function formatDeadline(iso) {
       if (!iso) return null;
+      if (isAsap(iso)) return { text: 'ASAP', cls: 'asap' };
       const deadline = new Date(iso + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -1725,6 +1775,30 @@
       if (diffDays === 1) return { text: 'Mañana', cls: 'soon' };
       if (diffDays <= 3) return { text: label + ' (' + diffDays + 'd)', cls: 'soon' };
       return { text: label, cls: '' };
+    }
+
+    function toggleAsap(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isActive = btn.classList.toggle('active');
+      if (isActive) {
+        input.value = '';
+        input.disabled = true;
+      } else {
+        input.disabled = false;
+      }
+    }
+
+    function getDeadlineValue(inputId, btnSelector) {
+      const btn = document.querySelector(btnSelector);
+      if (btn && btn.classList.contains('active')) return ASAP_DATE;
+      return document.getElementById(inputId).value || null;
+    }
+
+    function resetDeadlineField(inputId, btnSelector) {
+      document.getElementById(inputId).value = '';
+      document.getElementById(inputId).disabled = false;
+      const btn = document.querySelector(btnSelector);
+      if (btn) btn.classList.remove('active');
     }
 
     // === OFFLINE SUPPORT ===
@@ -2074,7 +2148,7 @@
       document.getElementById('process-dest').value = 'next';
       document.getElementById('process-context').value = '';
       document.getElementById('process-project').value = '';
-      document.getElementById('process-deadline').value = '';
+      resetDeadlineField('process-deadline', '#modal-process .btn-asap');
       document.getElementById('modal-process').classList.add('open');
     }
 
@@ -2087,7 +2161,7 @@
       const dest = document.getElementById('process-dest').value;
       const context = document.getElementById('process-context').value;
       const project = document.getElementById('process-project').value;
-      const deadline = document.getElementById('process-deadline').value;
+      const deadline = getDeadlineValue('process-deadline', '#modal-process .btn-asap');
       const title = document.getElementById('process-title').textContent;
       const statusMap = { next: 'Next action', waiting: 'Waiting', someday: 'Some day' };
       const inboxId = currentProcessId;
@@ -2148,7 +2222,17 @@
       document.getElementById('detail-status').value = f.Status || 'Next action';
       document.getElementById('detail-context').value = f.Context || '';
       document.getElementById('detail-project').value = f.Project || '';
-      document.getElementById('detail-deadline').value = f.Deadline || '';
+      const detailAsapBtn = document.getElementById('detail-asap-btn');
+      const detailDeadlineInput = document.getElementById('detail-deadline');
+      if (isAsap(f.Deadline)) {
+        detailDeadlineInput.value = '';
+        detailDeadlineInput.disabled = true;
+        detailAsapBtn.classList.add('active');
+      } else {
+        detailDeadlineInput.value = f.Deadline || '';
+        detailDeadlineInput.disabled = false;
+        detailAsapBtn.classList.remove('active');
+      }
       document.getElementById('modal-detail').classList.add('open');
     }
 
@@ -2162,7 +2246,7 @@
         Status: document.getElementById('detail-status').value,
         Context: document.getElementById('detail-context').value || null,
         Project: document.getElementById('detail-project').value || null,
-        Deadline: document.getElementById('detail-deadline').value || null
+        Deadline: getDeadlineValue('detail-deadline', '#detail-asap-btn')
       };
       await updateRecord(CONFIG.tables.tasks, currentDetailId, fields);
 
@@ -2346,7 +2430,7 @@
         const fields = { Title: title, Status: statusMap[dest] };
         const context = document.getElementById('input-context').value;
         const project = document.getElementById('input-project').value;
-        const deadline = document.getElementById('input-deadline').value;
+        const deadline = getDeadlineValue('input-deadline', '#extra-fields .btn-asap');
         if (context) fields.Context = context;
         if (project) fields.Project = project;
         if (deadline) fields.Deadline = deadline;
@@ -2356,7 +2440,7 @@
       titleEl.value = '';
       document.getElementById('input-context').value = '';
       document.getElementById('input-project').value = '';
-      document.getElementById('input-deadline').value = '';
+      resetDeadlineField('input-deadline', '#extra-fields .btn-asap');
       btn.disabled = false;
       btn.textContent = 'Agregar';
       closeModal('modal-add');
