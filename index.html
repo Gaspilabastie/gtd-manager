@@ -1206,7 +1206,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.7</span>
+      <span class="header-date">v1.8</span>
       <button class="header-settings" onclick="openSettings()">[CFG]</button>
     </div>
   </div>
@@ -2043,7 +2043,7 @@
     async function loadAll() {
       const [inbox, tasks, projects] = await Promise.all([
         fetchRecords(CONFIG.tables.inbox, "{Status} = 'New'"),
-        fetchRecords(CONFIG.tables.tasks),
+        fetchRecords(CONFIG.tables.tasks, "{Status} != 'Done'"),
         fetchRecords(CONFIG.tables.projects)
       ]);
 
@@ -2399,7 +2399,7 @@
 
       showToast('Completada', {
         commit: async () => {
-          await updateRecord(CONFIG.tables.tasks, recordId, { Status: null });
+          await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
         },
         undo: () => {
           el.classList.remove('checked');
@@ -2430,7 +2430,7 @@
       showToast('Movida a ' + label, {
         commit: async () => {
           if (status === 'done') {
-            await updateRecord(CONFIG.tables.tasks, id, { Status: null });
+            await updateRecord(CONFIG.tables.tasks, id, { Status: 'Done' });
           } else {
             await updateRecord(CONFIG.tables.tasks, id, { Status: status });
           }
