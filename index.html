@@ -1155,6 +1155,38 @@
       display: block;
     }
 
+    /* === POMO TASK PICKER === */
+    .pomo-task-option {
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pomo-task-option:active {
+      background: var(--black);
+      color: var(--accent);
+      border-color: var(--black);
+    }
+
+    .pomo-task-option-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 24px;
+    }
+
+    .pomo-task-option-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
     .filter-summary {
       font-family: var(--mono);
       font-size: 8px;
@@ -1206,7 +1238,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.8</span>
+      <span class="header-date">v1.9</span>
       <button class="header-settings" onclick="openSettings()">[CFG]</button>
     </div>
   </div>
@@ -1540,6 +1572,31 @@
       <div class="btn-row">
         <button class="btn-danger" onclick="deleteProject()">Eliminar</button>
         <button class="btn-add" id="btn-project-save" onclick="saveProjectDetail()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Project Modal -->
+  <div class="modal-overlay" id="modal-new-project" onclick="closeModal('modal-new-project', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">Proyecto // Nuevo</div>
+      <h3>Nuevo proyecto</h3>
+      <input type="text" id="new-project-name" placeholder="Nombre del proyecto">
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="cancelNewProject()">Cancelar</button>
+        <button class="btn-add" id="btn-new-project" onclick="confirmNewProject()">Crear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pick Pomo Task Modal -->
+  <div class="modal-overlay" id="modal-pomo-task" onclick="closeModal('modal-pomo-task', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">Pomodoro // Vincular tarea</div>
+      <h3>Elegir tarea</h3>
+      <div id="pomo-task-list" style="max-height:50vh;overflow-y:auto;"></div>
+      <div class="modal-actions" style="margin-top:12px;">
+        <button class="btn-cancel" onclick="closeModal('modal-pomo-task')">Cancelar</button>
       </div>
     </div>
   </div>
@@ -2107,16 +2164,42 @@
 
       // Listen for "new project" selection
       document.querySelectorAll('#input-project, #process-project, #detail-project').forEach(sel => {
-        sel.onchange = async function() {
+        sel.onchange = function() {
           if (this.value !== '__new__') return;
-          const name = prompt('Nombre del proyecto:');
-          if (!name || !name.trim()) { this.value = ''; return; }
-          await createRecord(CONFIG.tables.projects, { Name: name.trim(), Status: 'Active' });
-          await loadAll();
-          this.value = name.trim();
+          this.value = '';
+          newProjectCaller = this;
+          document.getElementById('new-project-name').value = '';
+          document.getElementById('modal-new-project').classList.add('open');
+          setTimeout(() => document.getElementById('new-project-name').focus(), 100);
         };
       });
     }
+
+    let newProjectCaller = null;
+
+    async function confirmNewProject() {
+      const name = document.getElementById('new-project-name').value.trim();
+      if (!name) return;
+      const btn = document.getElementById('btn-new-project');
+      btn.disabled = true;
+      btn.textContent = '...';
+      await createRecord(CONFIG.tables.projects, { Name: name, Status: 'Active' });
+      await loadAll();
+      if (newProjectCaller) newProjectCaller.value = name;
+      newProjectCaller = null;
+      btn.disabled = false;
+      btn.textContent = 'Crear';
+      closeModal('modal-new-project');
+    }
+
+    function cancelNewProject() {
+      newProjectCaller = null;
+      closeModal('modal-new-project');
+    }
+
+    document.getElementById('new-project-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') confirmNewProject();
+    });
 
     function renderList(section, records, renderFn) {
       const list = document.getElementById(`list-${section}`);
@@ -2864,18 +2947,24 @@
 
     function pickPomoTask() {
       const nextTasks = allTasks.filter(r => r.fields.Status === 'Next action');
-      if (nextTasks.length === 0) { alert('No hay próximas acciones'); return; }
+      if (nextTasks.length === 0) return;
 
-      // Reuse a simple approach: show task titles in the process modal style
-      const titles = nextTasks.map((t, i) => `${i + 1}. ${t.fields.Title}`).join('\n');
-      const choice = prompt('Elegir tarea (numero):\n' + titles);
-      const idx = parseInt(choice) - 1;
-      if (idx >= 0 && idx < nextTasks.length) {
-        pomoState.linkedTask = nextTasks[idx].id;
-        const link = document.getElementById('pomo-task-link');
-        link.textContent = nextTasks[idx].fields.Title;
-        link.classList.add('linked');
-      }
+      const container = document.getElementById('pomo-task-list');
+      container.innerHTML = nextTasks.map((t, i) =>
+        `<div class="pomo-task-option" onclick="selectPomoTask('${t.id}', '${escAttr(t.fields.Title || '')}')">
+          <span class="pomo-task-option-num">${String(i + 1).padStart(2, '0')}</span>
+          <span class="pomo-task-option-title">${escHtml(t.fields.Title || '')}</span>
+        </div>`
+      ).join('');
+      document.getElementById('modal-pomo-task').classList.add('open');
+    }
+
+    function selectPomoTask(id, title) {
+      pomoState.linkedTask = id;
+      const link = document.getElementById('pomo-task-link');
+      link.textContent = title;
+      link.classList.add('linked');
+      closeModal('modal-pomo-task');
     }
 
     // Recover timer if page was closed
