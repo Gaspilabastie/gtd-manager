@@ -1,7 +1,7 @@
 {
   "name": "GTD Manager",
   "short_name": "GTD",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f0f0ec",
   "theme_color": "#0a0a0a",
