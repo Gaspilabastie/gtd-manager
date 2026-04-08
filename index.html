@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTD Manager</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f0f0ec;
+      --surface: #ffffff;
+      --surface-alt: #e8e8e3;
+      --border: #1a1a1a;
+      --border-light: #d0d0cb;
+      --text: #0a0a0a;
+      --text-secondary: #6b6b65;
+      --accent: #00f0d0;
+      --accent-dark: #00c8ad;
+      --black: #0a0a0a;
+      --danger: #ff3b3b;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Inter', -apple-system, system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      max-width: 414px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    /* === HEADER === */
+    .header {
+      padding: 16px 16px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+      border-bottom: 2px solid var(--black);
+    }
+
+    .header-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .header-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .header-right {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .header-date {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+    }
+
+    .header-code {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    /* === STATS === */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-bottom: 2px solid var(--black);
+    }
+
+    .stat-card {
+      padding: 12px 12px;
+      border-right: 1px solid var(--border-light);
+      position: relative;
+    }
+
+    .stat-card:last-child {
+      border-right: none;
+    }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .stat-card.highlight {
+      background: var(--accent);
+    }
+
+    /* === SECTION TABS === */
+    .sections-nav {
+      display: flex;
+      border-bottom: 2px solid var(--black);
+      overflow-x: auto;
+    }
+
+    .sections-nav button {
+      flex: 1;
+      padding: 10px 4px;
+      background: none;
+      border: none;
+      border-right: 1px solid var(--border-light);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .sections-nav button:last-child {
+      border-right: none;
+    }
+
+    .sections-nav button.active {
+      background: var(--black);
+      color: var(--accent);
+    }
+
+    /* === TASK SECTIONS === */
+    .task-section {
+      padding: 0;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .section-header h2 {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+    }
+
+    .section-count {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    /* === TASK ITEMS === */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--surface);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .task-item:active {
+      background: var(--surface-alt);
+    }
+
+    .task-number {
+      width: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border-right: 1px solid var(--border-light);
+      flex-shrink: 0;
+    }
+
+    .task-status {
+      width: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-light);
+    }
+
+    .task-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--black);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .task-checkbox.checked {
+      background: var(--black);
+    }
+
+    .task-checkbox.checked::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+    }
+
+    .task-content {
+      flex: 1;
+      padding: 12px 14px;
+      min-width: 0;
+    }
+
+    .task-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: -0.2px;
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 6px;
+      border: 1px solid var(--black);
+    }
+
+    .tag-project {
+      background: var(--accent);
+      border-color: var(--black);
+    }
+
+    .tag-context {
+      background: none;
+      color: var(--text-secondary);
+      border-color: var(--text-secondary);
+    }
+
+    .tag-waiting {
+      background: none;
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .tag-time {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--text-secondary);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.5px;
+    }
+
+    .task-item.completed .task-title {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+
+    .task-item.inbox-item {
+      border-left: 4px solid var(--accent);
+    }
+
+    .task-item.inbox-item .task-number {
+      width: 44px;
+    }
+
+    /* === PROJECTS === */
+    .project-item {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-light);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .project-name {
+      font-size: 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
+
+    .project-count {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .project-bar {
+      height: 4px;
+      background: var(--surface-alt);
+      width: 100%;
+    }
+
+    .project-bar-fill {
+      height: 100%;
+      background: var(--black);
+    }
+
+    .project-bar-fill.complete {
+      background: var(--accent);
+    }
+
+    .project-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-secondary);
+    }
+
+    .project-name {
+      cursor: pointer;
+    }
+
+    .color-palette {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .color-swatch.selected {
+      border-color: var(--black);
+      transform: scale(1.15);
+    }
+
+    .project-color-bar {
+      height: 4px;
+      width: 100%;
+    }
+
+    .project-tasks {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--border-light);
+      margin-top: 4px;
+    }
+
+    .project-task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .project-task:last-child {
+      border-bottom: none;
+    }
+
+    .project-task-title {
+      font-size: 13px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .project-task-status {
+      font-family: var(--mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 6px;
+      border: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .project-empty {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      padding: 8px 0;
+    }
+
+    /* === FAB === */
+    .fab {
+      position: fixed;
+      bottom: 84px;
+      right: calc(50% - 187px);
+      width: 52px;
+      height: 52px;
+      background: var(--black);
+      border: none;
+      color: var(--accent);
+      font-size: 32px;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      z-index: 10;
+    }
+
+    .fab:active {
+      transform: scale(0.95);
+      background: var(--accent);
+      color: var(--black);
+    }
+
+    /* === BOTTOM NAV === */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 414px;
+      background: var(--black);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 28px;
+      z-index: 10;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      padding: 4px 12px;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-item.disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .nav-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* === MODAL === */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,10,0.7);
+      z-index: 20;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      width: 100%;
+      max-width: 414px;
+      border-top: 3px solid var(--black);
+      padding: 20px 16px 40px;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    .modal-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .modal h3 {
+      font-size: 22px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+      margin-bottom: 20px;
+    }
+
+    .modal input, .modal select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 2px solid var(--black);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      margin-bottom: 10px;
+      outline: none;
+    }
+
+    .modal input:focus {
+      border-color: var(--black);
+      background: var(--accent);
+    }
+
+    .modal select {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border: 2px solid var(--black);
+    }
+
+    .btn-cancel {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .btn-add {
+      background: var(--black);
+      color: var(--accent);
+    }
+
+    .btn-add:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* === TOAST === */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 382px;
+      background: var(--black);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      z-index: 15;
+      transition: opacity 0.2s, transform 0.2s;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(10px);
+    }
+
+    .toast.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-text {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .toast-undo {
+      background: none;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      cursor: pointer;
+    }
+
+    .toast-undo:active {
+      background: var(--accent);
+      color: var(--black);
+    }
+
+    .toast-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      transition: width linear;
+    }
+
+    /* === SPACER === */
+    .bottom-spacer {
+      height: 90px;
+    }
+
+    /* === LOADING === */
+    .loading {
+      padding: 32px 16px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state {
+      padding: 40px 16px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+    }
+
+    .field-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      margin-top: 6px;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .field-row select {
+      flex: 1;
+    }
+
+    .btn-danger {
+      background: var(--surface);
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .context-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .context-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .context-remove {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .context-add-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .context-add-row input {
+      flex: 1;
+    }
+
+    .btn-small {
+      padding: 12px 16px;
+      background: var(--black);
+      color: var(--accent);
+      border: 2px solid var(--black);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+
+    .header-settings {
+      background: none;
+      border: none;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 2px 0;
+    }
+
+    /* === FILTER === */
+    .filter-btn {
+      background: none;
+      border: 1px solid var(--border-light);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 3px 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-btn.active {
+      background: var(--black);
+      color: var(--accent);
+      border-color: var(--black);
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-option.include {
+      background: var(--black);
+      color: var(--accent);
+      border-color: var(--black);
+    }
+
+    .filter-option.exclude {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    .filter-option-name {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-option-state {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* === POMODORO === */
+    .pomo-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+      min-height: calc(100vh - 140px);
+    }
+
+    .pomo-container.visible {
+      display: flex;
+    }
+
+    .pomo-phase-bar {
+      width: 100%;
+      display: flex;
+      border-bottom: 2px solid var(--black);
+    }
+
+    .pomo-phase-bar button {
+      flex: 1;
+      padding: 10px 4px;
+      background: none;
+      border: none;
+      border-right: 1px solid var(--border-light);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      cursor: default;
+    }
+
+    .pomo-phase-bar button:last-child { border-right: none; }
+    .pomo-phase-bar button.active { background: var(--black); color: var(--accent); }
+    .pomo-phase-bar button.done { color: var(--accent); }
+
+    .pomo-timer-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px 20px;
+      width: 100%;
+    }
+
+    .pomo-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .pomo-time {
+      font-family: var(--mono);
+      font-size: 80px;
+      font-weight: 700;
+      letter-spacing: -4px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .pomo-time.break-time {
+      color: var(--accent-dark);
+    }
+
+    .pomo-task-link {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border: 1px dashed var(--border-light);
+      text-align: center;
+      max-width: 90%;
+    }
+
+    .pomo-task-link.linked {
+      border-style: solid;
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .pomo-controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .pomo-btn {
+      padding: 16px 32px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border: 2px solid var(--black);
+      background: var(--black);
+      color: var(--accent);
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .pomo-btn.secondary {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .pomo-btn:active {
+      transform: scale(0.97);
+    }
+
+    .pomo-stats {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 2px solid var(--black);
+    }
+
+    .pomo-stat {
+      padding: 12px 16px;
+      border-right: 1px solid var(--border-light);
+    }
+
+    .pomo-stat:last-child { border-right: none; }
+
+    .pomo-stat-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .pomo-stat-value {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -2px;
+    }
+
+    .pomo-progress {
+      width: 100%;
+      height: 4px;
+      background: var(--surface-alt);
+    }
+
+    .pomo-progress-fill {
+      height: 100%;
+      background: var(--black);
+      transition: width 1s linear;
+    }
+
+    .pomo-progress-fill.break-fill {
+      background: var(--accent);
+    }
+
+    /* === DRAG & DROP === */
+    .task-item.dragging {
+      opacity: 0.9;
+      position: fixed;
+      z-index: 25;
+      left: 0;
+      width: 100%;
+      max-width: 414px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      pointer-events: none;
+      border-left: 4px solid var(--accent);
+    }
+
+    .task-item.drag-placeholder {
+      background: var(--accent);
+      opacity: 0.15;
+      min-height: 48px;
+    }
+
+    .task-item.drag-placeholder * {
+      visibility: hidden;
+    }
+
+    .task-list.dragging-active .task-item {
+      transition: transform 0.15s;
+    }
+
+    .filter-summary {
+      font-family: var(--mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      padding: 8px 0 0;
+    }
+
+    .modal-process-title {
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 14px;
+      background: var(--bg);
+      border-left: 4px solid var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-row button {
+      flex: 1;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border: 2px solid var(--black);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-brand">
+      <span class="header-label">Task Management System</span>
+      <h1>GTD<br>Manager</h1>
+    </div>
+    <div class="header-right">
+      <span class="header-date" id="header-date"></span>
+      <button class="header-settings" onclick="openSettings()">[CFG]</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Inbox</div>
+      <div class="stat-number" id="stat-inbox">--</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Proximas</div>
+      <div class="stat-number" id="stat-next">--</div>
+    </div>
+    <div class="stat-card highlight">
+      <div class="stat-label">Proyectos</div>
+      <div class="stat-number" id="stat-projects">--</div>
+    </div>
+  </div>
+
+  <!-- Section tabs -->
+  <div class="sections-nav">
+    <button class="active" data-section="inbox">Inbox</button>
+    <button data-section="next">Proximas</button>
+    <button data-section="projects">Proyectos</button>
+    <button data-section="waiting">Esperando</button>
+    <button data-section="someday">Algun dia</button>
+  </div>
+
+  <!-- INBOX Section -->
+  <div class="task-section" id="section-inbox">
+    <div class="section-header">
+      <h2>Inbox // Procesar</h2>
+      <span class="section-count" id="count-inbox"></span>
+    </div>
+    <div class="task-list" id="list-inbox">
+      <div class="loading">Cargando...</div>
+    </div>
+  </div>
+
+  <!-- NEXT ACTIONS Section -->
+  <div class="task-section" id="section-next" style="display:none;">
+    <div class="section-header">
+      <h2>Proximas acciones</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="filter-btn" id="filter-btn" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
+        <span class="section-count" id="count-next"></span>
+      </div>
+    </div>
+    <div class="task-list" id="list-next">
+      <div class="loading">Cargando...</div>
+    </div>
+  </div>
+
+  <!-- PROJECTS Section -->
+  <div class="task-section" id="section-projects" style="display:none;">
+    <div class="section-header">
+      <h2>Proyectos activos</h2>
+      <span class="section-count" id="count-projects"></span>
+    </div>
+    <div class="task-list" id="list-projects">
+      <div class="loading">Cargando...</div>
+    </div>
+  </div>
+
+  <!-- WAITING Section -->
+  <div class="task-section" id="section-waiting" style="display:none;">
+    <div class="section-header">
+      <h2>Esperando respuesta</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="filter-btn" id="filter-btn-waiting" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
+        <span class="section-count" id="count-waiting"></span>
+      </div>
+    </div>
+    <div class="task-list" id="list-waiting">
+      <div class="loading">Cargando...</div>
+    </div>
+  </div>
+
+  <!-- SOMEDAY Section -->
+  <div class="task-section" id="section-someday" style="display:none;">
+    <div class="section-header">
+      <h2>Algun dia // Quizas</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="filter-btn" id="filter-btn-someday" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
+        <span class="section-count" id="count-someday"></span>
+      </div>
+    </div>
+    <div class="task-list" id="list-someday">
+      <div class="loading">Cargando...</div>
+    </div>
+  </div>
+
+  <!-- POMODORO Section -->
+  <div class="pomo-container" id="pomo-container">
+    <div class="pomo-phase-bar" id="pomo-phases">
+      <button class="active" data-phase="0">1</button>
+      <button data-phase="1">—</button>
+      <button data-phase="2">2</button>
+      <button data-phase="3">—</button>
+      <button data-phase="4">3</button>
+      <button data-phase="5">—</button>
+      <button data-phase="6">4</button>
+      <button data-phase="7">~~</button>
+    </div>
+    <div class="pomo-progress">
+      <div class="pomo-progress-fill" id="pomo-progress-fill"></div>
+    </div>
+    <div class="pomo-timer-wrap">
+      <div class="pomo-label" id="pomo-label">Enfoque</div>
+      <div class="pomo-time" id="pomo-time">25:00</div>
+      <div class="pomo-task-link" id="pomo-task-link" onclick="pickPomoTask()">
+        Vincular tarea...
+      </div>
+      <div class="pomo-controls">
+        <button class="pomo-btn" id="pomo-start" onclick="togglePomo()">Iniciar</button>
+        <button class="pomo-btn secondary" onclick="resetPomo()">Reset</button>
+      </div>
+    </div>
+    <div class="pomo-stats">
+      <div class="pomo-stat">
+        <div class="pomo-stat-label">Hoy</div>
+        <div class="pomo-stat-value" id="pomo-today">00</div>
+      </div>
+      <div class="pomo-stat">
+        <div class="pomo-stat-label">Total min</div>
+        <div class="pomo-stat-value" id="pomo-total-min">000</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-spacer"></div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="toast-text" id="toast-text"></span>
+    <button class="toast-undo" onclick="undoAction()">Deshacer</button>
+    <div class="toast-progress" id="toast-progress"></div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" onclick="openModal()">+</button>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-nav="gtd" onclick="switchNav('gtd')">
+      <span class="nav-icon">[GTD]</span>
+      <span class="nav-label">Tareas</span>
+    </button>
+    <button class="nav-item" data-nav="pomodoro" onclick="switchNav('pomodoro')">
+      <span class="nav-icon">[:::]</span>
+      <span class="nav-label">Pomodoro</span>
+    </button>
+    <button class="nav-item disabled" data-nav="calendar">
+      <span class="nav-icon">[//]</span>
+      <span class="nav-label">Agenda</span>
+    </button>
+  </nav>
+
+  <!-- Quick Add Modal -->
+  <div class="modal-overlay" id="modal-add" onclick="closeModal('modal-add', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">New Entry // Captura rapida</div>
+      <h3>Agregar tarea</h3>
+      <input type="text" id="input-title" placeholder="Que tenes en la cabeza?">
+      <select id="input-dest">
+        <option value="inbox">Inbox — Procesar despues</option>
+        <option value="next">Proxima accion</option>
+        <option value="waiting">Esperando</option>
+        <option value="someday">Algun dia / Quizas</option>
+      </select>
+      <div id="extra-fields" style="display:none;">
+        <div class="field-label">Contexto</div>
+        <select id="input-context">
+          <option value="">Sin contexto</option>
+        </select>
+        <div class="field-label">Proyecto</div>
+        <select id="input-project">
+          <option value="">Sin proyecto</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-add')">Cancelar</button>
+        <button class="btn-add" id="btn-add" onclick="addTask()">Agregar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Process Inbox Modal -->
+  <div class="modal-overlay" id="modal-process" onclick="closeModal('modal-process', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">Inbox // Procesar item</div>
+      <h3>Que hago con esto?</h3>
+      <div class="modal-process-title" id="process-title"></div>
+      <select id="process-dest">
+        <option value="next">Proxima accion</option>
+        <option value="waiting">Esperando</option>
+        <option value="someday">Algun dia / Quizas</option>
+      </select>
+      <div class="field-label">Contexto</div>
+      <select id="process-context">
+        <option value="">Sin contexto</option>
+      </select>
+      <div class="field-label">Proyecto</div>
+      <select id="process-project">
+        <option value="">Sin proyecto</option>
+      </select>
+      <div class="btn-row">
+        <button class="btn-danger" onclick="discardInbox()">Descartar</button>
+        <button class="btn-add" id="btn-process" onclick="confirmProcess()">Mover</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Detail Modal -->
+  <div class="modal-overlay" id="modal-detail" onclick="closeModal('modal-detail', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">Tarea // Detalle</div>
+      <h3 id="detail-title-display" style="margin-bottom:12px;"></h3>
+      <div class="field-label">Estado</div>
+      <select id="detail-status">
+        <option value="Next action">Proxima accion</option>
+        <option value="Waiting">Esperando</option>
+        <option value="Some day">Algun dia / Quizas</option>
+      </select>
+      <div class="field-label">Contexto</div>
+      <select id="detail-context">
+        <option value="">Sin contexto</option>
+      </select>
+      <div class="field-label">Proyecto</div>
+      <select id="detail-project">
+        <option value="">Sin proyecto</option>
+      </select>
+      <div class="btn-row">
+        <button class="btn-danger" onclick="deleteTask()">Eliminar</button>
+        <button class="btn-add" id="btn-detail-save" onclick="saveTaskDetail()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resolve Waiting Modal -->
+  <div class="modal-overlay" id="modal-resolve" onclick="closeModal('modal-resolve', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">Esperando // Resuelto</div>
+      <h3>A donde va?</h3>
+      <div class="modal-process-title" id="resolve-title"></div>
+      <div class="btn-row">
+        <button class="btn-add" onclick="confirmResolve('Next action')">Proxima</button>
+        <button class="btn-add" onclick="confirmResolve('Some day')">Algun dia</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn-danger" style="flex:1;" onclick="confirmResolve('done')">Completar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Modal -->
+  <div class="modal-overlay" id="modal-filter" onclick="closeModal('modal-filter', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">Filtro // Contextos</div>
+      <h3>Filtrar por contexto</h3>
+      <div class="filter-summary">Toca una vez para ver solo ese contexto. Toca de nuevo para ocultarlo. Una tercera vez limpia.</div>
+      <div id="filter-options" style="margin-top:12px;"></div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn-cancel" onclick="clearFilter(); closeModal('modal-filter')">Limpiar</button>
+        <button class="btn-add" onclick="closeModal('modal-filter')">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="modal-settings" onclick="closeModal('modal-settings', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">Config // Contextos</div>
+      <h3>Contextos</h3>
+      <div class="context-list" id="context-list"></div>
+      <div class="context-add-row">
+        <input type="text" id="context-new" placeholder="@nuevo_contexto">
+        <button class="btn-small" onclick="addContext()">+</button>
+      </div>
+      <div class="field-label" style="margin-top:16px;">Pomodoro (minutos)</div>
+      <div class="field-row">
+        <input type="number" id="cfg-pomo-work" min="1" max="60" style="text-align:center;" placeholder="25">
+        <input type="number" id="cfg-pomo-short" min="1" max="30" style="text-align:center;" placeholder="5">
+        <input type="number" id="cfg-pomo-long" min="1" max="60" style="text-align:center;" placeholder="15">
+      </div>
+      <div class="field-row" style="margin-top:-6px; margin-bottom:12px;">
+        <span class="field-label" style="flex:1;text-align:center;margin:0">Enfoque</span>
+        <span class="field-label" style="flex:1;text-align:center;margin:0">Break</span>
+        <span class="field-label" style="flex:1;text-align:center;margin:0">Largo</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-add" style="flex:1;" onclick="saveSettings()">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Detail Modal -->
+  <div class="modal-overlay" id="modal-project" onclick="closeModal('modal-project', event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-label">Proyecto // Detalle</div>
+      <h3 id="project-detail-name"></h3>
+      <div class="field-label">Nombre</div>
+      <input type="text" id="project-detail-name-input">
+      <div class="field-label">Color</div>
+      <div class="color-palette" id="project-color-palette"></div>
+      <div class="field-label">Estado</div>
+      <select id="project-detail-status">
+        <option value="Active">Activo</option>
+        <option value="Some day">Algun dia</option>
+        <option value="Done">Completado</option>
+      </select>
+      <div class="btn-row">
+        <button class="btn-danger" onclick="deleteProject()">Eliminar</button>
+        <button class="btn-add" id="btn-project-save" onclick="saveProjectDetail()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src=".env.js" onerror="/* not available in production — OK */"></script>
+  <script>
+    // === CONFIG ===
+    const DEFAULT_CONTEXTS = ['@compu', '@calle', '@casa', '@telefono', '@personas'];
+    const PROJECT_COLORS = [
+      { name: 'Turquesa', hex: '#00f0d0' },
+      { name: 'Azul', hex: '#4a90d9' },
+      { name: 'Indigo', hex: '#6c5ce7' },
+      { name: 'Rosa', hex: '#e84393' },
+      { name: 'Rojo', hex: '#e74c3c' },
+      { name: 'Naranja', hex: '#f39c12' },
+      { name: 'Verde', hex: '#27ae60' },
+      { name: 'Gris', hex: '#95a5a6' },
+    ];
+    const CONFIG = {
+      tables: {
+        inbox: 'tblXB8wC3LkT2UcpO',
+        tasks: 'tbl6fwNx6OPeBSWX4',
+        projects: 'tblKGlGqf22tgHT7x'
+      }
+    };
+
+    function getContexts() {
+      const saved = localStorage.getItem('gtd-contexts');
+      return saved ? JSON.parse(saved) : DEFAULT_CONTEXTS;
+    }
+
+    function saveContexts(list) {
+      localStorage.setItem('gtd-contexts', JSON.stringify(list));
+      populateContextSelects();
+    }
+
+    // === FILTER ===
+    // Each context can be: null (no filter), 'include', or 'exclude'
+    let contextFilters = {}; // { '@compu': 'include', '@calle': 'exclude', ... }
+
+    function openFilterModal() {
+      renderFilterOptions();
+      document.getElementById('modal-filter').classList.add('open');
+    }
+
+    function renderFilterOptions() {
+      const container = document.getElementById('filter-options');
+      const contexts = getContexts();
+      container.innerHTML = contexts.map(c => {
+        const state = contextFilters[c] || null;
+        const cls = state === 'include' ? 'include' : state === 'exclude' ? 'exclude' : '';
+        const label = state === 'include' ? 'Solo ver' : state === 'exclude' ? 'Ocultar' : '—';
+        return `<div class="filter-option ${cls}" onclick="cycleFilter('${escHtml(c)}')">
+          <span class="filter-option-name">${escHtml(c)}</span>
+          <span class="filter-option-state">${label}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function cycleFilter(ctx) {
+      const current = contextFilters[ctx] || null;
+      if (current === null) contextFilters[ctx] = 'include';
+      else if (current === 'include') contextFilters[ctx] = 'exclude';
+      else delete contextFilters[ctx];
+      renderFilterOptions();
+      applyFilter();
+      updateFilterButtons();
+    }
+
+    function clearFilter() {
+      contextFilters = {};
+      applyFilter();
+      updateFilterButtons();
+    }
+
+    function hasActiveFilter() {
+      return Object.keys(contextFilters).length > 0;
+    }
+
+    function updateFilterButtons() {
+      const active = hasActiveFilter();
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', active);
+      });
+    }
+
+    function applyFilter() {
+      const nextTasks = allTasks.filter(r => r.fields.Status === 'Next action');
+      const waitingTasks = allTasks.filter(r => r.fields.Status === 'Waiting');
+      const somedayTasks = allTasks.filter(r => r.fields.Status === 'Some day');
+
+      renderList('next', filterTasks(nextTasks), renderTaskItem);
+      renderList('waiting', filterTasks(waitingTasks), renderTaskItem);
+      renderList('someday', filterTasks(somedayTasks), renderTaskItem);
+    }
+
+    function filterTasks(tasks) {
+      if (!hasActiveFilter()) return tasks;
+      const includes = Object.entries(contextFilters).filter(([,v]) => v === 'include').map(([k]) => k);
+      const excludes = Object.entries(contextFilters).filter(([,v]) => v === 'exclude').map(([k]) => k);
+      return tasks.filter(t => {
+        const ctx = t.fields.Context || '';
+        if (excludes.includes(ctx)) return false;
+        if (includes.length > 0) return includes.includes(ctx);
+        return true;
+      });
+    }
+
+    function populateContextSelects() {
+      const contexts = getContexts();
+      document.querySelectorAll('#input-context, #process-context, #detail-context').forEach(sel => {
+        const val = sel.value;
+        sel.innerHTML = '<option value="">Sin contexto</option>';
+        contexts.forEach(c => {
+          sel.innerHTML += `<option value="${escHtml(c)}">${escHtml(c)}</option>`;
+        });
+        sel.value = val;
+      });
+    }
+
+    function openSettings() {
+      renderContextList();
+      const ps = getPomoSettings();
+      document.getElementById('cfg-pomo-work').value = ps.work;
+      document.getElementById('cfg-pomo-short').value = ps.short;
+      document.getElementById('cfg-pomo-long').value = ps.long;
+      document.getElementById('modal-settings').classList.add('open');
+    }
+
+    function saveSettings() {
+      const work = parseInt(document.getElementById('cfg-pomo-work').value) || 25;
+      const short = parseInt(document.getElementById('cfg-pomo-short').value) || 5;
+      const long = parseInt(document.getElementById('cfg-pomo-long').value) || 15;
+      localStorage.setItem('gtd-pomo-settings', JSON.stringify({ work, short, long }));
+      closeModal('modal-settings');
+      if (!pomoState.running) {
+        pomoState.remaining = getPhaseDuration(pomoState.phase);
+        pomoState.total = pomoState.remaining;
+        updatePomoDisplay();
+      }
+    }
+
+    function renderContextList() {
+      const list = document.getElementById('context-list');
+      const contexts = getContexts();
+      list.innerHTML = contexts.map((c, i) => `
+        <div class="context-item">
+          <span>${escHtml(c)}</span>
+          <button class="context-remove" onclick="removeContext(${i})">x</button>
+        </div>
+      `).join('');
+    }
+
+    function addContext() {
+      const input = document.getElementById('context-new');
+      let val = input.value.trim();
+      if (!val) return;
+      if (!val.startsWith('@')) val = '@' + val;
+      const contexts = getContexts();
+      if (contexts.includes(val)) { input.value = ''; return; }
+      contexts.push(val);
+      saveContexts(contexts);
+      input.value = '';
+      renderContextList();
+    }
+
+    function removeContext(index) {
+      const contexts = getContexts();
+      contexts.splice(index, 1);
+      saveContexts(contexts);
+      renderContextList();
+    }
+
+    document.getElementById('context-new').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addContext();
+    });
+
+    const API_BASE = 'https://api.airtable.com/v0/appyFZVm9gxRyESZ1';
+
+    function getToken() {
+      let token = localStorage.getItem('airtable_token');
+      if (!token) {
+        token = prompt('Ingresá tu Airtable Personal Access Token:');
+        if (token) localStorage.setItem('airtable_token', token.trim());
+      }
+      return token;
+    }
+
+    const AT_TOKEN = getToken();
+
+    function apiUrl(tableId, recordId) {
+      return `${API_BASE}/${tableId}${recordId ? '/' + recordId : ''}`;
+    }
+
+    function headers() {
+      return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${AT_TOKEN}` };
+    }
+
+    // === DATE ===
+    function formatHeaderDate() {
+      const d = new Date();
+      const months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+      const dd = String(d.getDate()).padStart(2, '0');
+      const yy = String(d.getFullYear()).slice(-2);
+      return `${dd}/${months[d.getMonth()]}/${yy}`;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const now = new Date();
+      const diff = Math.floor((now - d) / 86400000);
+      if (diff === 0) return 'Hoy';
+      if (diff === 1) return 'Ayer';
+      const dd = String(d.getDate()).padStart(2, '0');
+      const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      return `${dd} ${months[d.getMonth()]}`;
+    }
+
+    // === API CALLS ===
+    async function fetchRecords(tableId, filterFormula) {
+      const params = new URLSearchParams();
+      if (filterFormula) params.set('filterByFormula', filterFormula);
+      const url = apiUrl(tableId) + (params.toString() ? '?' + params : '');
+      const res = await fetch(url, { headers: headers() });
+      const data = await res.json();
+      return data.records || [];
+    }
+
+    async function createRecord(tableId, fields) {
+      const res = await fetch(apiUrl(tableId), {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ fields, typecast: true })
+      });
+      return res.json();
+    }
+
+    async function updateRecord(tableId, recordId, fields) {
+      const res = await fetch(apiUrl(tableId, recordId), {
+        method: 'PATCH',
+        headers: headers(),
+        body: JSON.stringify({ fields, typecast: true })
+      });
+      return res.json();
+    }
+
+    // === STATE ===
+    let currentProcessId = null;
+    let currentDetailId = null;
+    let currentProjectId = null;
+    let projectsList = [];
+    let allTasks = [];
+
+    // === RENDER ===
+    function renderInboxItem(record, index) {
+      const f = record.fields;
+      return `
+        <div class="task-item inbox-item" data-id="${record.id}" data-table="inbox" onclick="openProcess('${record.id}', '${escAttr(f.Title || '')}')">
+          <div class="task-number">${String(index + 1).padStart(2, '0')}</div>
+          <div class="task-status">
+            <div class="task-checkbox"></div>
+          </div>
+          <div class="task-content">
+            <div class="task-title">${escHtml(f.Title || '')}</div>
+            <div class="task-meta">
+              <span class="tag-time">Capturado ${formatDate(f.Created)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function escAttr(s) {
+      return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function renderTaskItem(record, index) {
+      const f = record.fields;
+      const isWaiting = f.Status === 'Waiting';
+      const checkAction = isWaiting
+        ? `event.stopPropagation(); resolveWaiting('${record.id}')`
+        : `event.stopPropagation(); completeTask('${record.id}', this)`;
+      let meta = '';
+      if (f.Project) {
+        const pColor = getProjectColor(f.Project);
+        const pStyle = pColor ? `background:${pColor};border-color:${pColor};color:#0a0a0a` : '';
+        meta += `<span class="tag tag-project" style="${pStyle}">${escHtml(f.Project)}</span>`;
+      }
+      if (f.Context) meta += `<span class="tag tag-context">${escHtml(f.Context)}</span>`;
+      if (isWaiting) meta += `<span class="tag tag-waiting">Esperando</span>`;
+      return `
+        <div class="task-item" data-id="${record.id}" onclick="openTaskDetail('${record.id}')">
+          <div class="task-number">${String(index + 1).padStart(2, '0')}</div>
+          <div class="task-status">
+            <div class="task-checkbox" onclick="${checkAction}"></div>
+          </div>
+          <div class="task-content">
+            <div class="task-title">${escHtml(f.Title || '')}</div>
+            ${meta ? `<div class="task-meta">${meta}</div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function renderProjectItem(record) {
+      const f = record.fields;
+      const name = f.Name || '';
+      const tasks = allTasks.filter(t => t.fields.Project === name);
+      const statusLabel = { 'Next action': '>>', 'Waiting': '..', 'Some day': '~' };
+
+      let tasksHtml = '';
+      if (tasks.length === 0) {
+        tasksHtml = '<div class="project-empty">Sin tareas asignadas</div>';
+      } else {
+        tasksHtml = tasks.map(t => {
+          const tf = t.fields;
+          return `<div class="project-task" onclick="event.stopPropagation(); openTaskDetail('${t.id}')">
+            <span class="project-task-title">${escHtml(tf.Title || '')}</span>
+            <span class="project-task-status">${escHtml(statusLabel[tf.Status] || tf.Status || '')}</span>
+          </div>`;
+        }).join('');
+      }
+
+      const color = f.Color || '#00f0d0';
+      return `
+        <div class="project-item" onclick="openProjectDetail('${record.id}')">
+          <div class="project-color-bar" style="background:${color}"></div>
+          <div class="project-header">
+            <div>
+              <div class="project-name">${escHtml(name)}</div>
+            </div>
+            <div class="project-count">${String(tasks.length).padStart(2, '0')}</div>
+          </div>
+          <div class="project-tasks">${tasksHtml}</div>
+        </div>`;
+    }
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // === LOAD DATA ===
+    async function loadAll() {
+      const [inbox, tasks, projects] = await Promise.all([
+        fetchRecords(CONFIG.tables.inbox, "{Status} = 'New'"),
+        fetchRecords(CONFIG.tables.tasks),
+        fetchRecords(CONFIG.tables.projects)
+      ]);
+
+      // Sort by Order field (nulls last)
+      inbox.sort((a, b) => {
+        const oa = a.fields.Order != null ? a.fields.Order : 9999;
+        const ob = b.fields.Order != null ? b.fields.Order : 9999;
+        return oa - ob;
+      });
+      tasks.sort((a, b) => {
+        const oa = a.fields.Order != null ? a.fields.Order : 9999;
+        const ob = b.fields.Order != null ? b.fields.Order : 9999;
+        return oa - ob;
+      });
+      allTasks = tasks;
+      const activeProjects = projects.filter(r => r.fields.Status === 'Active');
+      const nextTasks = tasks.filter(r => r.fields.Status === 'Next action');
+      const waitingTasks = tasks.filter(r => r.fields.Status === 'Waiting');
+      const somedayTasks = tasks.filter(r => r.fields.Status === 'Some day');
+
+      // Cache projects for selects
+      projectsList = projects;
+      populateProjectSelects();
+
+      // Stats
+      document.getElementById('stat-inbox').textContent = String(inbox.length).padStart(2, '0');
+      document.getElementById('stat-next').textContent = String(nextTasks.length).padStart(2, '0');
+      document.getElementById('stat-projects').textContent = String(activeProjects.length).padStart(2, '0');
+
+      // Inbox
+      renderList('inbox', inbox, renderInboxItem);
+      // Next actions (apply filter)
+      renderList('next', filterTasks(nextTasks), renderTaskItem);
+      // Waiting
+      renderList('waiting', filterTasks(waitingTasks), renderTaskItem);
+      // Someday
+      renderList('someday', filterTasks(somedayTasks), renderTaskItem);
+      // Projects
+      renderList('projects', activeProjects, renderProjectItem);
+      // Update filter state
+      updateFilterButtons();
+    }
+
+    function populateProjectSelects() {
+      ['input-project', 'process-project', 'detail-project'].forEach(id => {
+        const sel = document.getElementById(id);
+        const val = sel.value;
+        sel.innerHTML = '<option value="">Sin proyecto</option>';
+        projectsList.forEach(p => {
+          const name = p.fields.Name || '';
+          sel.innerHTML += `<option value="${escHtml(name)}">${escHtml(name)}</option>`;
+        });
+        sel.innerHTML += '<option value="__new__">+ Nuevo proyecto</option>';
+        sel.value = val;
+      });
+
+      // Listen for "new project" selection
+      document.querySelectorAll('#input-project, #process-project, #detail-project').forEach(sel => {
+        sel.onchange = async function() {
+          if (this.value !== '__new__') return;
+          const name = prompt('Nombre del proyecto:');
+          if (!name || !name.trim()) { this.value = ''; return; }
+          await createRecord(CONFIG.tables.projects, { Name: name.trim(), Status: 'Active' });
+          await loadAll();
+          this.value = name.trim();
+        };
+      });
+    }
+
+    function renderList(section, records, renderFn) {
+      const list = document.getElementById(`list-${section}`);
+      const count = document.getElementById(`count-${section}`);
+      if (records.length === 0) {
+        list.innerHTML = '<div class="empty-state">Sin items</div>';
+      } else {
+        list.innerHTML = records.map((r, i) => renderFn(r, i)).join('');
+      }
+      if (count) count.textContent = `${String(records.length).padStart(2, '0')} items`;
+    }
+
+    // === UNDO SYSTEM ===
+    const UNDO_DELAY = 5000;
+    let pendingAction = null;
+    let pendingTimer = null;
+
+    function showToast(text, action) {
+      // Cancel any previous pending action
+      if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+
+      pendingAction = action;
+      const toast = document.getElementById('toast');
+      const progress = document.getElementById('toast-progress');
+      document.getElementById('toast-text').textContent = text;
+
+      // Reset and show
+      progress.style.transition = 'none';
+      progress.style.width = '100%';
+      toast.classList.add('visible');
+
+      // Animate progress bar
+      requestAnimationFrame(() => {
+        progress.style.transition = `width ${UNDO_DELAY}ms linear`;
+        progress.style.width = '0%';
+      });
+
+      pendingTimer = setTimeout(async () => {
+        toast.classList.remove('visible');
+        if (pendingAction) {
+          await pendingAction.commit();
+          pendingAction = null;
+        }
+        pendingTimer = null;
+        loadAll();
+      }, UNDO_DELAY);
+    }
+
+    function undoAction() {
+      if (pendingTimer) clearTimeout(pendingTimer);
+      pendingTimer = null;
+      document.getElementById('toast').classList.remove('visible');
+      if (pendingAction && pendingAction.undo) pendingAction.undo();
+      pendingAction = null;
+      loadAll();
+    }
+
+    // === ACTIONS ===
+
+    // Process inbox: open modal to classify
+    function openProcess(recordId, title) {
+      currentProcessId = recordId;
+      document.getElementById('process-title').textContent = title;
+      document.getElementById('process-dest').value = 'next';
+      document.getElementById('process-context').value = '';
+      document.getElementById('process-project').value = '';
+      document.getElementById('modal-process').classList.add('open');
+    }
+
+    async function confirmProcess() {
+      if (!currentProcessId) return;
+      const btn = document.getElementById('btn-process');
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      const dest = document.getElementById('process-dest').value;
+      const context = document.getElementById('process-context').value;
+      const project = document.getElementById('process-project').value;
+      const title = document.getElementById('process-title').textContent;
+      const statusMap = { next: 'Next action', waiting: 'Waiting', someday: 'Some day' };
+      const inboxId = currentProcessId;
+
+      btn.disabled = false;
+      btn.textContent = 'Mover';
+      currentProcessId = null;
+      document.getElementById('modal-process').classList.remove('open');
+
+      // Optimistic UI: hide from inbox immediately
+      document.querySelectorAll('.task-item.inbox-item').forEach(item => {
+        if (item.querySelector('.task-title')?.textContent === title) {
+          item.style.display = 'none';
+        }
+      });
+
+      showToast('Movido a ' + dest, {
+        commit: async () => {
+          const fields = { Title: title, Status: statusMap[dest] };
+          if (context) fields.Context = context;
+          if (project) fields.Project = project;
+          await createRecord(CONFIG.tables.tasks, fields);
+          await updateRecord(CONFIG.tables.inbox, inboxId, { Status: 'Processed' });
+        },
+        undo: () => {} // Just reload, item is still "New" in Airtable
+      });
+    }
+
+    async function discardInbox() {
+      if (!currentProcessId) return;
+      const inboxId = currentProcessId;
+      const title = document.getElementById('process-title').textContent;
+      currentProcessId = null;
+      document.getElementById('modal-process').classList.remove('open');
+
+      document.querySelectorAll('.task-item.inbox-item').forEach(item => {
+        if (item.querySelector('.task-title')?.textContent === title) {
+          item.style.display = 'none';
+        }
+      });
+
+      showToast('Descartado', {
+        commit: async () => {
+          await updateRecord(CONFIG.tables.inbox, inboxId, { Status: 'Processed' });
+        },
+        undo: () => {}
+      });
+    }
+
+    // Task detail: view/edit any task
+    function openTaskDetail(recordId) {
+      const record = allTasks.find(r => r.id === recordId);
+      if (!record) return;
+      currentDetailId = recordId;
+      const f = record.fields;
+      document.getElementById('detail-title-display').textContent = f.Title || '';
+      document.getElementById('detail-status').value = f.Status || 'Next action';
+      document.getElementById('detail-context').value = f.Context || '';
+      document.getElementById('detail-project').value = f.Project || '';
+      document.getElementById('modal-detail').classList.add('open');
+    }
+
+    async function saveTaskDetail() {
+      if (!currentDetailId) return;
+      const btn = document.getElementById('btn-detail-save');
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      const fields = {
+        Status: document.getElementById('detail-status').value,
+        Context: document.getElementById('detail-context').value || null,
+        Project: document.getElementById('detail-project').value || null
+      };
+      await updateRecord(CONFIG.tables.tasks, currentDetailId, fields);
+
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+      currentDetailId = null;
+      closeModal('modal-detail');
+      loadAll();
+    }
+
+    async function deleteTask() {
+      if (!currentDetailId) return;
+      const id = currentDetailId;
+      const title = document.getElementById('detail-title-display').textContent;
+      currentDetailId = null;
+      closeModal('modal-detail');
+
+      showToast('Eliminada', {
+        commit: async () => {
+          await fetch(apiUrl(CONFIG.tables.tasks, id), {
+            method: 'DELETE',
+            headers: headers()
+          });
+        },
+        undo: () => {}
+      });
+      loadAll();
+    }
+
+    // Color palette
+    function renderColorPalette(selected) {
+      const pal = document.getElementById('project-color-palette');
+      pal.innerHTML = PROJECT_COLORS.map(c =>
+        `<div class="color-swatch${c.hex === selected ? ' selected' : ''}" data-color="${c.hex}" style="background:${c.hex}" onclick="selectColor(this)"></div>`
+      ).join('');
+    }
+
+    function selectColor(el) {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function getProjectColor(projectName) {
+      const p = projectsList.find(r => r.fields.Name === projectName);
+      return p?.fields.Color || null;
+    }
+
+    // Project detail
+    function openProjectDetail(recordId) {
+      const record = projectsList.find(r => r.id === recordId);
+      if (!record) return;
+      currentProjectId = recordId;
+      const f = record.fields;
+      document.getElementById('project-detail-name').textContent = f.Name || '';
+      document.getElementById('project-detail-name-input').value = f.Name || '';
+      document.getElementById('project-detail-status').value = f.Status || 'Active';
+      renderColorPalette(f.Color || PROJECT_COLORS[0].hex);
+      document.getElementById('modal-project').classList.add('open');
+    }
+
+    async function saveProjectDetail() {
+      if (!currentProjectId) return;
+      const btn = document.getElementById('btn-project-save');
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      const selectedSwatch = document.querySelector('.color-swatch.selected');
+      const fields = {
+        Name: document.getElementById('project-detail-name-input').value.trim(),
+        Status: document.getElementById('project-detail-status').value,
+        Color: selectedSwatch ? selectedSwatch.dataset.color : null
+      };
+      await updateRecord(CONFIG.tables.projects, currentProjectId, fields);
+
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+      currentProjectId = null;
+      closeModal('modal-project');
+      loadAll();
+    }
+
+    async function deleteProject() {
+      if (!currentProjectId) return;
+      const id = currentProjectId;
+      currentProjectId = null;
+      closeModal('modal-project');
+
+      showToast('Proyecto eliminado', {
+        commit: async () => {
+          await fetch(apiUrl(CONFIG.tables.projects, id), {
+            method: 'DELETE',
+            headers: headers()
+          });
+        },
+        undo: () => {}
+      });
+      loadAll();
+    }
+
+    // Complete task (checkbox in task lists)
+    function completeTask(recordId, el) {
+      el.classList.add('checked');
+      const item = el.closest('.task-item');
+      item.classList.add('completed');
+      item.style.pointerEvents = 'none';
+      const title = item.querySelector('.task-title')?.textContent || 'Tarea';
+
+      showToast('Completada', {
+        commit: async () => {
+          await updateRecord(CONFIG.tables.tasks, recordId, { Status: null });
+        },
+        undo: () => {
+          el.classList.remove('checked');
+          item.classList.remove('completed');
+          item.style.pointerEvents = '';
+        }
+      });
+    }
+
+    // Resolve waiting task: move to another status
+    let resolveWaitingId = null;
+
+    function resolveWaiting(recordId) {
+      resolveWaitingId = recordId;
+      const record = allTasks.find(r => r.id === recordId);
+      const title = record?.fields.Title || '';
+      document.getElementById('resolve-title').textContent = title;
+      document.getElementById('modal-resolve').classList.add('open');
+    }
+
+    async function confirmResolve(status) {
+      if (!resolveWaitingId) return;
+      const id = resolveWaitingId;
+      resolveWaitingId = null;
+      closeModal('modal-resolve');
+
+      const label = status === 'Next action' ? 'Proximas' : status === 'Some day' ? 'Algun dia' : 'Completada';
+      showToast('Movida a ' + label, {
+        commit: async () => {
+          if (status === 'done') {
+            await updateRecord(CONFIG.tables.tasks, id, { Status: null });
+          } else {
+            await updateRecord(CONFIG.tables.tasks, id, { Status: status });
+          }
+        },
+        undo: () => {}
+      });
+      loadAll();
+    }
+
+    // Add new task from FAB modal
+    async function addTask() {
+      const titleEl = document.getElementById('input-title');
+      const destEl = document.getElementById('input-dest');
+      const title = titleEl.value.trim();
+      if (!title) return;
+
+      const btn = document.getElementById('btn-add');
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      const dest = destEl.value;
+      const today = new Date().toISOString().split('T')[0];
+
+      if (dest === 'inbox') {
+        await createRecord(CONFIG.tables.inbox, {
+          Title: title,
+          Created: today,
+          Status: 'New'
+        });
+      } else {
+        const statusMap = { next: 'Next action', waiting: 'Waiting', someday: 'Some day' };
+        const fields = { Title: title, Status: statusMap[dest] };
+        const context = document.getElementById('input-context').value;
+        const project = document.getElementById('input-project').value;
+        if (context) fields.Context = context;
+        if (project) fields.Project = project;
+        await createRecord(CONFIG.tables.tasks, fields);
+      }
+
+      titleEl.value = '';
+      document.getElementById('input-context').value = '';
+      document.getElementById('input-project').value = '';
+      btn.disabled = false;
+      btn.textContent = 'Agregar';
+      closeModal('modal-add');
+      loadAll();
+    }
+
+    // === NAVIGATION ===
+    function showSection(id) {
+      document.querySelectorAll('.task-section').forEach(s => s.style.display = 'none');
+      document.getElementById('section-' + id).style.display = 'block';
+
+      document.querySelectorAll('.sections-nav button').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.sections-nav button[data-section="${id}"]`).classList.add('active');
+
+    }
+
+    document.querySelectorAll('.sections-nav button').forEach(btn => {
+      btn.addEventListener('click', () => showSection(btn.dataset.section));
+    });
+
+    function openModal() {
+      document.getElementById('input-dest').value = 'inbox';
+      document.getElementById('extra-fields').style.display = 'none';
+      document.getElementById('modal-add').classList.add('open');
+      setTimeout(() => document.getElementById('input-title').focus(), 100);
+    }
+
+    function closeModal(id, e) {
+      if (!e || e.target === e.currentTarget) {
+        document.getElementById(id).classList.remove('open');
+      }
+    }
+
+    // Show/hide extra fields based on destination
+    document.getElementById('input-dest').addEventListener('change', (e) => {
+      document.getElementById('extra-fields').style.display =
+        e.target.value === 'inbox' ? 'none' : 'block';
+    });
+
+    // Enter key to submit
+    document.getElementById('input-title').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTask();
+    });
+
+    // === DRAG & DROP ===
+    let dragState = null;
+
+    function initDrag() {
+      document.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.task-list')) onDragStart(e);
+      }, { passive: false });
+      document.addEventListener('touchmove', onDragMove, { passive: false });
+      document.addEventListener('touchend', onDragEnd);
+    }
+
+    function onDragStart(e) {
+      const item = e.target.closest('.task-item');
+      if (!item || !item.dataset.id) return;
+      // Don't drag from checkbox
+      if (e.target.closest('.task-checkbox')) return;
+
+      const list = item.closest('.task-list');
+      const items = Array.from(list.querySelectorAll('.task-item'));
+      if (items.length < 2) return;
+
+      // Long press detection
+      const touch = e.touches[0];
+      const startY = touch.clientY;
+      const startX = touch.clientX;
+
+      const longPressTimer = setTimeout(() => {
+        // Start drag
+        const rect = item.getBoundingClientRect();
+        const offsetY = startY - rect.top;
+
+        // Create placeholder
+        const placeholder = item.cloneNode(true);
+        placeholder.classList.add('drag-placeholder');
+        placeholder.removeAttribute('data-id');
+        item.parentNode.insertBefore(placeholder, item);
+
+        // Float the item
+        item.classList.add('dragging');
+        item.style.top = (startY - offsetY) + 'px';
+        item.style.left = rect.left + 'px';
+        item.style.width = rect.width + 'px';
+        list.classList.add('dragging-active');
+
+        dragState = {
+          item,
+          placeholder,
+          list,
+          offsetY,
+          startIndex: items.indexOf(item),
+          currentIndex: items.indexOf(item),
+          section: list.id.replace('list-', '')
+        };
+
+        // Haptic feedback if available
+        if (navigator.vibrate) navigator.vibrate(30);
+      }, 400);
+
+      // Cancel if finger moves too much
+      const cancelHandler = (e2) => {
+        const t = e2.touches[0];
+        if (Math.abs(t.clientY - startY) > 10 || Math.abs(t.clientX - startX) > 10) {
+          clearTimeout(longPressTimer);
+          document.removeEventListener('touchmove', cancelHandler);
+        }
+      };
+      document.addEventListener('touchmove', cancelHandler, { passive: true });
+
+      // Cancel on touch end
+      const endHandler = () => {
+        clearTimeout(longPressTimer);
+        document.removeEventListener('touchend', endHandler);
+        document.removeEventListener('touchmove', cancelHandler);
+      };
+      document.addEventListener('touchend', endHandler, { once: true });
+    }
+
+    function onDragMove(e) {
+      if (!dragState) return;
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const y = touch.clientY;
+      dragState.item.style.top = (y - dragState.offsetY) + 'px';
+
+      // Find drop position
+      const items = Array.from(dragState.list.querySelectorAll('.task-item:not(.dragging)'));
+      let newIndex = items.length;
+      for (let i = 0; i < items.length; i++) {
+        const rect = items[i].getBoundingClientRect();
+        if (y < rect.top + rect.height / 2) {
+          newIndex = i;
+          break;
+        }
+      }
+
+      if (newIndex !== dragState.currentIndex) {
+        // Move placeholder
+        if (newIndex >= items.length) {
+          dragState.list.appendChild(dragState.placeholder);
+        } else {
+          dragState.list.insertBefore(dragState.placeholder, items[newIndex]);
+        }
+        dragState.currentIndex = newIndex;
+      }
+    }
+
+    async function onDragEnd() {
+      if (!dragState) return;
+
+      const { item, placeholder, list, startIndex, currentIndex, section } = dragState;
+
+      // Remove drag styles
+      item.classList.remove('dragging');
+      item.style.cssText = '';
+      list.classList.remove('dragging-active');
+
+      // Put item in new position
+      placeholder.parentNode.insertBefore(item, placeholder);
+      placeholder.remove();
+
+      dragState = null;
+
+      if (startIndex === currentIndex) return;
+
+      // Get new order of record IDs and detect table
+      const orderedEls = Array.from(list.querySelectorAll('.task-item[data-id]'));
+      const isInbox = orderedEls[0]?.dataset.table === 'inbox';
+      const tableId = isInbox ? CONFIG.tables.inbox : CONFIG.tables.tasks;
+      const orderedIds = orderedEls.map(el => el.dataset.id);
+
+      // Update Order field in Airtable (batch, max 10 per request)
+      for (let i = 0; i < orderedIds.length; i += 10) {
+        const batch = orderedIds.slice(i, i + 10).map((id, j) => ({
+          id, fields: { Order: i + j }
+        }));
+        await fetch(apiUrl(tableId), {
+          method: 'PATCH',
+          headers: headers(),
+          body: JSON.stringify({ records: batch, typecast: true })
+        });
+      }
+    }
+
+    // === NAV SWITCHING ===
+    function switchNav(nav) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelector(`.nav-item[data-nav="${nav}"]`).classList.add('active');
+
+      const gtdEls = ['.header', '.stats', '.sections-nav', ...document.querySelectorAll('.task-section')].filter(Boolean);
+      const isGtd = nav === 'gtd';
+
+      // GTD elements
+      document.querySelector('.header').style.display = isGtd ? '' : 'none';
+      document.querySelector('.stats').style.display = isGtd ? '' : 'none';
+      document.querySelector('.sections-nav').style.display = isGtd ? '' : 'none';
+      document.querySelectorAll('.task-section').forEach(s => {
+        if (isGtd) {
+          // Restore active section
+          const activeTab = document.querySelector('.sections-nav button.active');
+          s.style.display = s.id === 'section-' + activeTab?.dataset.section ? 'block' : 'none';
+        } else {
+          s.style.display = 'none';
+        }
+      });
+      document.querySelector('.fab').style.display = isGtd ? '' : 'none';
+      document.querySelector('.bottom-spacer').style.display = isGtd ? '' : 'none';
+
+      // Pomodoro
+      document.getElementById('pomo-container').classList.toggle('visible', nav === 'pomodoro');
+    }
+
+    // === POMODORO ===
+    const POMO_DEFAULTS = { work: 25, short: 5, long: 15 };
+    // Phases: work, short break, work, short break, work, short break, work, long break
+    const POMO_PHASES = [
+      { type: 'work', label: 'Enfoque' },
+      { type: 'short', label: 'Break' },
+      { type: 'work', label: 'Enfoque' },
+      { type: 'short', label: 'Break' },
+      { type: 'work', label: 'Enfoque' },
+      { type: 'short', label: 'Break' },
+      { type: 'work', label: 'Enfoque' },
+      { type: 'long', label: 'Break largo' },
+    ];
+
+    let pomoState = {
+      phase: 0,
+      remaining: POMO_DEFAULTS.work * 60,
+      total: POMO_DEFAULTS.work * 60,
+      running: false,
+      interval: null,
+      linkedTask: null,
+      startedAt: null,
+    };
+
+    function getPomoSettings() {
+      const saved = localStorage.getItem('gtd-pomo-settings');
+      return saved ? JSON.parse(saved) : POMO_DEFAULTS;
+    }
+
+    function getPomoStats() {
+      const today = new Date().toISOString().split('T')[0];
+      const saved = localStorage.getItem('gtd-pomo-stats');
+      const stats = saved ? JSON.parse(saved) : { date: today, count: 0, totalMin: 0 };
+      if (stats.date !== today) { stats.date = today; stats.count = 0; }
+      return stats;
+    }
+
+    function savePomoStats(stats) {
+      localStorage.setItem('gtd-pomo-stats', JSON.stringify(stats));
+    }
+
+    function getPhaseDuration(phase) {
+      const s = getPomoSettings();
+      const type = POMO_PHASES[phase].type;
+      return (type === 'work' ? s.work : type === 'short' ? s.short : s.long) * 60;
+    }
+
+    function formatPomoTime(secs) {
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function updatePomoDisplay() {
+      const phase = POMO_PHASES[pomoState.phase];
+      const isBreak = phase.type !== 'work';
+
+      document.getElementById('pomo-time').textContent = formatPomoTime(pomoState.remaining);
+      document.getElementById('pomo-time').classList.toggle('break-time', isBreak);
+      document.getElementById('pomo-label').textContent = phase.label;
+      document.getElementById('pomo-start').textContent = pomoState.running ? 'Pausa' : 'Iniciar';
+
+      // Progress
+      const pct = pomoState.total > 0 ? ((pomoState.total - pomoState.remaining) / pomoState.total) * 100 : 0;
+      const fill = document.getElementById('pomo-progress-fill');
+      fill.style.width = pct + '%';
+      fill.classList.toggle('break-fill', isBreak);
+
+      // Phase indicators
+      document.querySelectorAll('#pomo-phases button').forEach((btn, i) => {
+        btn.classList.remove('active', 'done');
+        if (i === pomoState.phase) btn.classList.add('active');
+        else if (i < pomoState.phase) btn.classList.add('done');
+      });
+
+      // Stats
+      const stats = getPomoStats();
+      document.getElementById('pomo-today').textContent = String(stats.count).padStart(2, '0');
+      document.getElementById('pomo-total-min').textContent = String(stats.totalMin).padStart(3, '0');
+    }
+
+    function togglePomo() {
+      if (pomoState.running) {
+        pausePomo();
+      } else {
+        startPomo();
+      }
+    }
+
+    function startPomo() {
+      pomoState.running = true;
+      pomoState.startedAt = Date.now();
+      // Save start state for recovery
+      localStorage.setItem('gtd-pomo-state', JSON.stringify({
+        phase: pomoState.phase,
+        remaining: pomoState.remaining,
+        total: pomoState.total,
+        startedAt: pomoState.startedAt,
+        linkedTask: pomoState.linkedTask
+      }));
+
+      pomoState.interval = setInterval(() => {
+        pomoState.remaining--;
+        if (pomoState.remaining <= 0) {
+          onPhaseComplete();
+        }
+        updatePomoDisplay();
+      }, 1000);
+      updatePomoDisplay();
+    }
+
+    function pausePomo() {
+      pomoState.running = false;
+      clearInterval(pomoState.interval);
+      pomoState.interval = null;
+      localStorage.removeItem('gtd-pomo-state');
+      updatePomoDisplay();
+    }
+
+    function resetPomo() {
+      pausePomo();
+      pomoState.phase = 0;
+      pomoState.remaining = getPhaseDuration(0);
+      pomoState.total = pomoState.remaining;
+      pomoState.linkedTask = null;
+      document.getElementById('pomo-task-link').textContent = 'Vincular tarea...';
+      document.getElementById('pomo-task-link').classList.remove('linked');
+      localStorage.removeItem('gtd-pomo-state');
+      updatePomoDisplay();
+    }
+
+    function onPhaseComplete() {
+      clearInterval(pomoState.interval);
+      pomoState.interval = null;
+      pomoState.running = false;
+
+      const phase = POMO_PHASES[pomoState.phase];
+      if (phase.type === 'work') {
+        const stats = getPomoStats();
+        stats.count++;
+        const s = getPomoSettings();
+        stats.totalMin += s.work;
+        savePomoStats(stats);
+      }
+
+      // Notify
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      if (Notification.permission === 'granted') {
+        const msg = phase.type === 'work' ? 'Pomodoro terminado. Descansa!' : 'Break terminado. A trabajar!';
+        new Notification('GTD Manager', { body: msg });
+      }
+
+      // Advance phase
+      pomoState.phase = (pomoState.phase + 1) % POMO_PHASES.length;
+      pomoState.remaining = getPhaseDuration(pomoState.phase);
+      pomoState.total = pomoState.remaining;
+      localStorage.removeItem('gtd-pomo-state');
+      updatePomoDisplay();
+    }
+
+    function pickPomoTask() {
+      const nextTasks = allTasks.filter(r => r.fields.Status === 'Next action');
+      if (nextTasks.length === 0) { alert('No hay proximas acciones'); return; }
+
+      // Reuse a simple approach: show task titles in the process modal style
+      const titles = nextTasks.map((t, i) => `${i + 1}. ${t.fields.Title}`).join('\n');
+      const choice = prompt('Elegir tarea (numero):\n' + titles);
+      const idx = parseInt(choice) - 1;
+      if (idx >= 0 && idx < nextTasks.length) {
+        pomoState.linkedTask = nextTasks[idx].id;
+        const link = document.getElementById('pomo-task-link');
+        link.textContent = nextTasks[idx].fields.Title;
+        link.classList.add('linked');
+      }
+    }
+
+    // Recover timer if page was closed
+    function recoverPomo() {
+      const saved = localStorage.getItem('gtd-pomo-state');
+      if (!saved) return;
+      const state = JSON.parse(saved);
+      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+      const remaining = state.remaining - elapsed;
+      if (remaining > 0) {
+        pomoState.phase = state.phase;
+        pomoState.remaining = remaining;
+        pomoState.total = state.total;
+        pomoState.linkedTask = state.linkedTask;
+        if (state.linkedTask) {
+          const task = allTasks.find(t => t.id === state.linkedTask);
+          if (task) {
+            const link = document.getElementById('pomo-task-link');
+            link.textContent = task.fields.Title;
+            link.classList.add('linked');
+          }
+        }
+        startPomo();
+      } else {
+        // Phase completed while away
+        pomoState.phase = state.phase;
+        onPhaseComplete();
+      }
+    }
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // === INIT ===
+    document.getElementById('header-date').textContent = formatHeaderDate();
+    populateContextSelects();
+    updatePomoDisplay();
+    loadAll().then(() => { initDrag(); recoverPomo(); });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+
+</body>
+</html>

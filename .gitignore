@@ -1,0 +1,20 @@
+# Netlify (no longer used)
+.netlify
+netlify/
+netlify.toml
+
+# Local dev secrets
+.env.js
+.airtable_token
+
+# Dev/test artifacts
+node_modules/
+package*.json
+screenshot*.png
+test*.js
+
+# Misc
+.DS_Store
+CONTEXT.md
+demo.html
+*.webp
