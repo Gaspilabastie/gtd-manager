@@ -1033,7 +1033,7 @@
     }
 
     /* === DRAG & DROP === */
-    .task-item.dragging {
+    .task-item.dragging, .project-item.dragging {
       opacity: 0.9;
       position: fixed;
       z-index: 25;
@@ -1045,13 +1045,13 @@
       border-left: 4px solid var(--accent);
     }
 
-    .task-item.drag-placeholder {
+    .task-item.drag-placeholder, .project-item.drag-placeholder {
       background: var(--accent);
       opacity: 0.15;
       min-height: 48px;
     }
 
-    .task-item.drag-placeholder * {
+    .task-item.drag-placeholder *, .project-item.drag-placeholder * {
       visibility: hidden;
     }
 
@@ -1206,7 +1206,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.6</span>
+      <span class="header-date">v1.7</span>
       <button class="header-settings" onclick="openSettings()">[CFG]</button>
     </div>
   </div>
@@ -1278,7 +1278,7 @@
     <div class="section-header">
       <h2>Esperando respuesta</h2>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="filter-btn sort-btn" id="sort-btn-waiting" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
+        <button class="filter-btn sort-btn" id="sort-btn-waiting" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
         <button class="filter-btn" id="filter-btn-waiting" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
         <span class="section-count" id="count-waiting"></span>
       </div>
@@ -1293,7 +1293,7 @@
     <div class="section-header">
       <h2>Algún día // Quizás</h2>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="filter-btn sort-btn" id="sort-btn-someday" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
+        <button class="filter-btn sort-btn" id="sort-btn-someday" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
         <button class="filter-btn" id="filter-btn-someday" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
         <span class="section-count" id="count-someday"></span>
       </div>
@@ -2021,7 +2021,7 @@
 
       const color = f.Color || '#00f0d0';
       return `
-        <div class="project-item" onclick="openProjectDetail('${record.id}')">
+        <div class="project-item" data-id="${record.id}" data-table="projects" onclick="openProjectDetail('${record.id}')">
           <div class="project-color-bar" style="background:${color}"></div>
           <div class="project-header">
             <div>
@@ -2060,6 +2060,11 @@
       });
       allTasks = tasks;
       const activeProjects = projects.filter(r => r.fields.Status === 'Active');
+      activeProjects.sort((a, b) => {
+        const oa = a.fields.Order != null ? a.fields.Order : 9999;
+        const ob = b.fields.Order != null ? b.fields.Order : 9999;
+        return oa - ob;
+      });
       const nextTasks = tasks.filter(r => r.fields.Status === 'Next action');
       const waitingTasks = tasks.filter(r => r.fields.Status === 'Waiting');
       const somedayTasks = tasks.filter(r => r.fields.Status === 'Some day');
@@ -2527,13 +2532,15 @@
     }
 
     function onDragStart(e) {
-      const item = e.target.closest('.task-item');
+      const item = e.target.closest('.task-item') || e.target.closest('.project-item');
       if (!item || !item.dataset.id) return;
-      // Don't drag from checkbox
+      // Don't drag from checkbox or project sub-tasks
       if (e.target.closest('.task-checkbox')) return;
+      if (e.target.closest('.project-task')) return;
 
       const list = item.closest('.task-list');
-      const items = Array.from(list.querySelectorAll('.task-item'));
+      const itemSelector = item.classList.contains('project-item') ? '.project-item' : '.task-item';
+      const items = Array.from(list.querySelectorAll(itemSelector));
       if (items.length < 2) return;
 
       // Long press detection
@@ -2564,6 +2571,7 @@
           placeholder,
           list,
           offsetY,
+          itemSelector,
           startIndex: items.indexOf(item),
           currentIndex: items.indexOf(item),
           section: list.id.replace('list-', '')
@@ -2601,7 +2609,7 @@
       dragState.item.style.top = (y - dragState.offsetY) + 'px';
 
       // Find drop position
-      const items = Array.from(dragState.list.querySelectorAll('.task-item:not(.dragging)'));
+      const items = Array.from(dragState.list.querySelectorAll(dragState.itemSelector + ':not(.dragging)'));
       let newIndex = items.length;
       for (let i = 0; i < items.length; i++) {
         const rect = items[i].getBoundingClientRect();
@@ -2625,7 +2633,7 @@
     async function onDragEnd() {
       if (!dragState) return;
 
-      const { item, placeholder, list, startIndex, currentIndex, section } = dragState;
+      const { item, placeholder, list, startIndex, currentIndex, section, itemSelector } = dragState;
 
       // Remove drag styles
       item.classList.remove('dragging');
@@ -2641,9 +2649,11 @@
       if (startIndex === currentIndex) return;
 
       // Get new order of record IDs and detect table
-      const orderedEls = Array.from(list.querySelectorAll('.task-item[data-id]'));
-      const isInbox = orderedEls[0]?.dataset.table === 'inbox';
-      const tableId = isInbox ? CONFIG.tables.inbox : CONFIG.tables.tasks;
+      const isProject = itemSelector === '.project-item';
+      const selForOrder = isProject ? '.project-item[data-id]' : '.task-item[data-id]';
+      const orderedEls = Array.from(list.querySelectorAll(selForOrder));
+      const isInbox = !isProject && orderedEls[0]?.dataset.table === 'inbox';
+      const tableId = isProject ? CONFIG.tables.projects : isInbox ? CONFIG.tables.inbox : CONFIG.tables.tasks;
       const orderedIds = orderedEls.map(el => el.dataset.id);
 
       // Update Order field in Airtable (batch, max 10 per request)
