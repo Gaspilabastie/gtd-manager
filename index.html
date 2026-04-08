@@ -1059,6 +1059,66 @@
       transition: transform 0.15s;
     }
 
+    /* === DEADLINE === */
+    .tag-deadline {
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+    }
+
+    .tag-deadline.overdue {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .tag-deadline.soon {
+      color: #e67e22;
+      font-weight: 700;
+    }
+
+    .tag-deadline.today {
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
+
+    /* === OFFLINE INDICATOR === */
+    .offline-bar {
+      display: none;
+      background: var(--danger);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-align: center;
+      padding: 6px;
+    }
+
+    .offline-bar.visible {
+      display: block;
+    }
+
+    .sync-bar {
+      display: none;
+      background: #e67e22;
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-align: center;
+      padding: 6px;
+      cursor: pointer;
+    }
+
+    .sync-bar.visible {
+      display: block;
+    }
+
     .filter-summary {
       font-family: var(--mono);
       font-size: 8px;
@@ -1097,6 +1157,10 @@
   </style>
 </head>
 <body>
+
+  <!-- Offline / Sync indicators -->
+  <div class="offline-bar" id="offline-bar">Sin conexion — modo offline</div>
+  <div class="sync-bar" id="sync-bar" onclick="syncOfflineQueue()">Cambios pendientes — tocar para sincronizar</div>
 
   <!-- Header -->
   <div class="header">
@@ -1286,6 +1350,8 @@
         <select id="input-project">
           <option value="">Sin proyecto</option>
         </select>
+        <div class="field-label">Deadline</div>
+        <input type="date" id="input-deadline">
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal('modal-add')">Cancelar</button>
@@ -1313,6 +1379,8 @@
       <select id="process-project">
         <option value="">Sin proyecto</option>
       </select>
+      <div class="field-label">Deadline</div>
+      <input type="date" id="process-deadline">
       <div class="btn-row">
         <button class="btn-danger" onclick="discardInbox()">Descartar</button>
         <button class="btn-add" id="btn-process" onclick="confirmProcess()">Mover</button>
@@ -1339,6 +1407,8 @@
       <select id="detail-project">
         <option value="">Sin proyecto</option>
       </select>
+      <div class="field-label">Deadline</div>
+      <input type="date" id="detail-deadline">
       <div class="btn-row">
         <button class="btn-danger" onclick="deleteTask()">Eliminar</button>
         <button class="btn-add" id="btn-detail-save" onclick="saveTaskDetail()">Guardar</button>
@@ -1640,17 +1710,113 @@
       return `${dd} ${months[d.getMonth()]}`;
     }
 
+    // === DEADLINE ===
+    function formatDeadline(iso) {
+      if (!iso) return null;
+      const deadline = new Date(iso + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diffDays = Math.floor((deadline - today) / 86400000);
+      const dd = String(deadline.getDate()).padStart(2, '0');
+      const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      const label = `${dd} ${months[deadline.getMonth()]}`;
+      if (diffDays < 0) return { text: label + ' (vencida)', cls: 'overdue' };
+      if (diffDays === 0) return { text: 'Hoy', cls: 'today' };
+      if (diffDays === 1) return { text: 'Manana', cls: 'soon' };
+      if (diffDays <= 3) return { text: label + ' (' + diffDays + 'd)', cls: 'soon' };
+      return { text: label, cls: '' };
+    }
+
+    // === OFFLINE SUPPORT ===
+    let isOnline = navigator.onLine;
+
+    function updateOnlineStatus() {
+      isOnline = navigator.onLine;
+      document.getElementById('offline-bar').classList.toggle('visible', !isOnline);
+      updateSyncBar();
+    }
+
+    function getOfflineQueue() {
+      const q = localStorage.getItem('gtd-offline-queue');
+      return q ? JSON.parse(q) : [];
+    }
+
+    function saveOfflineQueue(queue) {
+      localStorage.setItem('gtd-offline-queue', JSON.stringify(queue));
+      updateSyncBar();
+    }
+
+    function enqueueOffline(op) {
+      const queue = getOfflineQueue();
+      queue.push({ ...op, ts: Date.now() });
+      saveOfflineQueue(queue);
+    }
+
+    function updateSyncBar() {
+      const queue = getOfflineQueue();
+      document.getElementById('sync-bar').classList.toggle('visible', queue.length > 0 && isOnline);
+    }
+
+    async function syncOfflineQueue() {
+      const queue = getOfflineQueue();
+      if (queue.length === 0) return;
+      const failed = [];
+      for (const op of queue) {
+        try {
+          if (op.method === 'POST') {
+            await fetch(apiUrl(op.tableId), {
+              method: 'POST', headers: headers(),
+              body: JSON.stringify({ fields: op.fields, typecast: true })
+            });
+          } else if (op.method === 'PATCH') {
+            const url = op.recordId ? apiUrl(op.tableId, op.recordId) : apiUrl(op.tableId);
+            await fetch(url, {
+              method: 'PATCH', headers: headers(),
+              body: JSON.stringify(op.recordId ? { fields: op.fields, typecast: true } : op.body)
+            });
+          } else if (op.method === 'DELETE') {
+            await fetch(apiUrl(op.tableId, op.recordId), {
+              method: 'DELETE', headers: headers()
+            });
+          }
+        } catch (e) {
+          failed.push(op);
+        }
+      }
+      saveOfflineQueue(failed);
+      if (failed.length === 0) loadAll();
+    }
+
+    window.addEventListener('online', () => { updateOnlineStatus(); syncOfflineQueue(); });
+    window.addEventListener('offline', updateOnlineStatus);
+
+    function cacheKey(tableId, filter) {
+      return 'gtd-cache-' + tableId + (filter || '');
+    }
+
     // === API CALLS ===
     async function fetchRecords(tableId, filterFormula) {
       const params = new URLSearchParams();
       if (filterFormula) params.set('filterByFormula', filterFormula);
       const url = apiUrl(tableId) + (params.toString() ? '?' + params : '');
-      const res = await fetch(url, { headers: headers() });
-      const data = await res.json();
-      return data.records || [];
+      try {
+        const res = await fetch(url, { headers: headers() });
+        const data = await res.json();
+        const records = data.records || [];
+        localStorage.setItem(cacheKey(tableId, filterFormula), JSON.stringify(records));
+        return records;
+      } catch (e) {
+        // Offline fallback: return cached data
+        const cached = localStorage.getItem(cacheKey(tableId, filterFormula));
+        return cached ? JSON.parse(cached) : [];
+      }
     }
 
     async function createRecord(tableId, fields) {
+      if (!isOnline) {
+        enqueueOffline({ method: 'POST', tableId, fields });
+        return { id: 'offline-' + Date.now(), fields };
+      }
       const res = await fetch(apiUrl(tableId), {
         method: 'POST',
         headers: headers(),
@@ -1660,6 +1826,10 @@
     }
 
     async function updateRecord(tableId, recordId, fields) {
+      if (!isOnline) {
+        enqueueOffline({ method: 'PATCH', tableId, recordId, fields });
+        return { id: recordId, fields };
+      }
       const res = await fetch(apiUrl(tableId, recordId), {
         method: 'PATCH',
         headers: headers(),
@@ -1711,6 +1881,8 @@
       }
       if (f.Context) meta += `<span class="tag tag-context">${escHtml(f.Context)}</span>`;
       if (isWaiting) meta += `<span class="tag tag-waiting">Esperando</span>`;
+      const dl = formatDeadline(f.Deadline);
+      if (dl) meta += `<span class="tag-deadline ${dl.cls}">${dl.text}</span>`;
       return `
         <div class="task-item" data-id="${record.id}" onclick="openTaskDetail('${record.id}')">
           <div class="task-number">${String(index + 1).padStart(2, '0')}</div>
@@ -1902,6 +2074,7 @@
       document.getElementById('process-dest').value = 'next';
       document.getElementById('process-context').value = '';
       document.getElementById('process-project').value = '';
+      document.getElementById('process-deadline').value = '';
       document.getElementById('modal-process').classList.add('open');
     }
 
@@ -1914,6 +2087,7 @@
       const dest = document.getElementById('process-dest').value;
       const context = document.getElementById('process-context').value;
       const project = document.getElementById('process-project').value;
+      const deadline = document.getElementById('process-deadline').value;
       const title = document.getElementById('process-title').textContent;
       const statusMap = { next: 'Next action', waiting: 'Waiting', someday: 'Some day' };
       const inboxId = currentProcessId;
@@ -1935,6 +2109,7 @@
           const fields = { Title: title, Status: statusMap[dest] };
           if (context) fields.Context = context;
           if (project) fields.Project = project;
+          if (deadline) fields.Deadline = deadline;
           await createRecord(CONFIG.tables.tasks, fields);
           await updateRecord(CONFIG.tables.inbox, inboxId, { Status: 'Processed' });
         },
@@ -1973,6 +2148,7 @@
       document.getElementById('detail-status').value = f.Status || 'Next action';
       document.getElementById('detail-context').value = f.Context || '';
       document.getElementById('detail-project').value = f.Project || '';
+      document.getElementById('detail-deadline').value = f.Deadline || '';
       document.getElementById('modal-detail').classList.add('open');
     }
 
@@ -1985,7 +2161,8 @@
       const fields = {
         Status: document.getElementById('detail-status').value,
         Context: document.getElementById('detail-context').value || null,
-        Project: document.getElementById('detail-project').value || null
+        Project: document.getElementById('detail-project').value || null,
+        Deadline: document.getElementById('detail-deadline').value || null
       };
       await updateRecord(CONFIG.tables.tasks, currentDetailId, fields);
 
@@ -2005,6 +2182,10 @@
 
       showToast('Eliminada', {
         commit: async () => {
+          if (!isOnline) {
+            enqueueOffline({ method: 'DELETE', tableId: CONFIG.tables.tasks, recordId: id });
+            return;
+          }
           await fetch(apiUrl(CONFIG.tables.tasks, id), {
             method: 'DELETE',
             headers: headers()
@@ -2075,6 +2256,10 @@
 
       showToast('Proyecto eliminado', {
         commit: async () => {
+          if (!isOnline) {
+            enqueueOffline({ method: 'DELETE', tableId: CONFIG.tables.projects, recordId: id });
+            return;
+          }
           await fetch(apiUrl(CONFIG.tables.projects, id), {
             method: 'DELETE',
             headers: headers()
@@ -2161,14 +2346,17 @@
         const fields = { Title: title, Status: statusMap[dest] };
         const context = document.getElementById('input-context').value;
         const project = document.getElementById('input-project').value;
+        const deadline = document.getElementById('input-deadline').value;
         if (context) fields.Context = context;
         if (project) fields.Project = project;
+        if (deadline) fields.Deadline = deadline;
         await createRecord(CONFIG.tables.tasks, fields);
       }
 
       titleEl.value = '';
       document.getElementById('input-context').value = '';
       document.getElementById('input-project').value = '';
+      document.getElementById('input-deadline').value = '';
       btn.disabled = false;
       btn.textContent = 'Agregar';
       closeModal('modal-add');
@@ -2349,11 +2537,16 @@
         const batch = orderedIds.slice(i, i + 10).map((id, j) => ({
           id, fields: { Order: i + j }
         }));
-        await fetch(apiUrl(tableId), {
-          method: 'PATCH',
-          headers: headers(),
-          body: JSON.stringify({ records: batch, typecast: true })
-        });
+        const body = { records: batch, typecast: true };
+        if (!isOnline) {
+          enqueueOffline({ method: 'PATCH', tableId, body });
+        } else {
+          await fetch(apiUrl(tableId), {
+            method: 'PATCH',
+            headers: headers(),
+            body: JSON.stringify(body)
+          });
+        }
       }
     }
 
@@ -2598,7 +2791,8 @@
     document.getElementById('header-date').textContent = formatHeaderDate();
     populateContextSelects();
     updatePomoDisplay();
-    loadAll().then(() => { initDrag(); recoverPomo(); });
+    updateOnlineStatus();
+    loadAll().then(() => { initDrag(); recoverPomo(); if (isOnline) syncOfflineQueue(); });
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
