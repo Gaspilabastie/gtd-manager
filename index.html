@@ -823,7 +823,7 @@
       letter-spacing: 0.5px;
     }
 
-    .filter-btn.active {
+    .filter-btn.active, .sort-btn.active {
       background: var(--black);
       color: var(--accent);
       border-color: var(--black);
@@ -1251,6 +1251,7 @@
     <div class="section-header">
       <h2>Próximas acciones</h2>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button class="filter-btn sort-btn" id="sort-btn-next" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
         <button class="filter-btn" id="filter-btn" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
         <span class="section-count" id="count-next"></span>
       </div>
@@ -1276,6 +1277,7 @@
     <div class="section-header">
       <h2>Esperando respuesta</h2>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button class="filter-btn sort-btn" id="sort-btn-waiting" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
         <button class="filter-btn" id="filter-btn-waiting" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
         <span class="section-count" id="count-waiting"></span>
       </div>
@@ -1290,6 +1292,7 @@
     <div class="section-header">
       <h2>Algún día // Quizás</h2>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button class="filter-btn sort-btn" id="sort-btn-someday" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
         <button class="filter-btn" id="filter-btn-someday" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
         <span class="section-count" id="count-someday"></span>
       </div>
@@ -1627,9 +1630,35 @@
       const waitingTasks = allTasks.filter(r => r.fields.Status === 'Waiting');
       const somedayTasks = allTasks.filter(r => r.fields.Status === 'Some day');
 
-      renderList('next', filterTasks(nextTasks), renderTaskItem);
-      renderList('waiting', filterTasks(waitingTasks), renderTaskItem);
-      renderList('someday', filterTasks(somedayTasks), renderTaskItem);
+      renderList('next', sortTasks(filterTasks(nextTasks)), renderTaskItem);
+      renderList('waiting', sortTasks(filterTasks(waitingTasks)), renderTaskItem);
+      renderList('someday', sortTasks(filterTasks(somedayTasks)), renderTaskItem);
+    }
+
+    // === SORT BY DEADLINE ===
+    let sortByDeadline = false;
+
+    function toggleSort() {
+      sortByDeadline = !sortByDeadline;
+      document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.classList.toggle('active', sortByDeadline);
+      });
+      applyFilter();
+    }
+
+    function sortTasks(tasks) {
+      if (!sortByDeadline) return tasks;
+      return [...tasks].sort((a, b) => {
+        const da = a.fields.Deadline || '';
+        const db = b.fields.Deadline || '';
+        // ASAP first, then by date (earliest first), no deadline last
+        if (da === ASAP_DATE && db !== ASAP_DATE) return -1;
+        if (db === ASAP_DATE && da !== ASAP_DATE) return 1;
+        if (!da && db) return 1;
+        if (da && !db) return -1;
+        if (!da && !db) return 0;
+        return da.localeCompare(db);
+      });
     }
 
     function filterTasks(tasks) {
@@ -2046,11 +2075,11 @@
       // Inbox
       renderList('inbox', inbox, renderInboxItem);
       // Next actions (apply filter)
-      renderList('next', filterTasks(nextTasks), renderTaskItem);
+      renderList('next', sortTasks(filterTasks(nextTasks)), renderTaskItem);
       // Waiting
-      renderList('waiting', filterTasks(waitingTasks), renderTaskItem);
+      renderList('waiting', sortTasks(filterTasks(waitingTasks)), renderTaskItem);
       // Someday
-      renderList('someday', filterTasks(somedayTasks), renderTaskItem);
+      renderList('someday', sortTasks(filterTasks(somedayTasks)), renderTaskItem);
       // Projects
       renderList('projects', activeProjects, renderProjectItem);
       // Update filter state
