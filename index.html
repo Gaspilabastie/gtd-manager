@@ -1159,7 +1159,7 @@
 <body>
 
   <!-- Offline / Sync indicators -->
-  <div class="offline-bar" id="offline-bar">Sin conexion — modo offline</div>
+  <div class="offline-bar" id="offline-bar">Sin conexión — modo offline</div>
   <div class="sync-bar" id="sync-bar" onclick="syncOfflineQueue()">Cambios pendientes — tocar para sincronizar</div>
 
   <!-- Header -->
@@ -1181,7 +1181,7 @@
       <div class="stat-number" id="stat-inbox">--</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Proximas</div>
+      <div class="stat-label">Próximas</div>
       <div class="stat-number" id="stat-next">--</div>
     </div>
     <div class="stat-card highlight">
@@ -1193,10 +1193,10 @@
   <!-- Section tabs -->
   <div class="sections-nav">
     <button class="active" data-section="inbox">Inbox</button>
-    <button data-section="next">Proximas</button>
+    <button data-section="next">Próximas</button>
     <button data-section="projects">Proyectos</button>
     <button data-section="waiting">Esperando</button>
-    <button data-section="someday">Algun dia</button>
+    <button data-section="someday">Algún día</button>
   </div>
 
   <!-- INBOX Section -->
@@ -1213,7 +1213,7 @@
   <!-- NEXT ACTIONS Section -->
   <div class="task-section" id="section-next" style="display:none;">
     <div class="section-header">
-      <h2>Proximas acciones</h2>
+      <h2>Próximas acciones</h2>
       <div style="display:flex;gap:8px;align-items:center;">
         <button class="filter-btn" id="filter-btn" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
         <span class="section-count" id="count-next"></span>
@@ -1252,7 +1252,7 @@
   <!-- SOMEDAY Section -->
   <div class="task-section" id="section-someday" style="display:none;">
     <div class="section-header">
-      <h2>Algun dia // Quizas</h2>
+      <h2>Algún día // Quizás</h2>
       <div style="display:flex;gap:8px;align-items:center;">
         <button class="filter-btn" id="filter-btn-someday" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
         <span class="section-count" id="count-someday"></span>
@@ -1334,12 +1334,12 @@
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-label">New Entry // Captura rapida</div>
       <h3>Agregar tarea</h3>
-      <input type="text" id="input-title" placeholder="Que tenes en la cabeza?">
+      <input type="text" id="input-title" placeholder="Qué tenés en la cabeza?">
       <select id="input-dest">
         <option value="inbox">Inbox — Procesar despues</option>
-        <option value="next">Proxima accion</option>
+        <option value="next">Próxima acción</option>
         <option value="waiting">Esperando</option>
-        <option value="someday">Algun dia / Quizas</option>
+        <option value="someday">Algún día / Quizás</option>
       </select>
       <div id="extra-fields" style="display:none;">
         <div class="field-label">Contexto</div>
@@ -1364,12 +1364,12 @@
   <div class="modal-overlay" id="modal-process" onclick="closeModal('modal-process', event)">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-label">Inbox // Procesar item</div>
-      <h3>Que hago con esto?</h3>
+      <h3>Qué hago con esto?</h3>
       <div class="modal-process-title" id="process-title"></div>
       <select id="process-dest">
-        <option value="next">Proxima accion</option>
+        <option value="next">Próxima acción</option>
         <option value="waiting">Esperando</option>
-        <option value="someday">Algun dia / Quizas</option>
+        <option value="someday">Algún día / Quizás</option>
       </select>
       <div class="field-label">Contexto</div>
       <select id="process-context">
@@ -1395,9 +1395,9 @@
       <h3 id="detail-title-display" style="margin-bottom:12px;"></h3>
       <div class="field-label">Estado</div>
       <select id="detail-status">
-        <option value="Next action">Proxima accion</option>
+        <option value="Next action">Próxima acción</option>
         <option value="Waiting">Esperando</option>
-        <option value="Some day">Algun dia / Quizas</option>
+        <option value="Some day">Algún día / Quizás</option>
       </select>
       <div class="field-label">Contexto</div>
       <select id="detail-context">
@@ -1423,8 +1423,8 @@
       <h3>A donde va?</h3>
       <div class="modal-process-title" id="resolve-title"></div>
       <div class="btn-row">
-        <button class="btn-add" onclick="confirmResolve('Next action')">Proxima</button>
-        <button class="btn-add" onclick="confirmResolve('Some day')">Algun dia</button>
+        <button class="btn-add" onclick="confirmResolve('Next action')">Próxima</button>
+        <button class="btn-add" onclick="confirmResolve('Some day')">Algún día</button>
       </div>
       <div class="btn-row">
         <button class="btn-danger" style="flex:1;" onclick="confirmResolve('done')">Completar</button>
@@ -1485,7 +1485,7 @@
       <div class="field-label">Estado</div>
       <select id="project-detail-status">
         <option value="Active">Activo</option>
-        <option value="Some day">Algun dia</option>
+        <option value="Some day">Algún día</option>
         <option value="Done">Completado</option>
       </select>
       <div class="btn-row">
@@ -1722,7 +1722,7 @@
       const label = `${dd} ${months[deadline.getMonth()]}`;
       if (diffDays < 0) return { text: label + ' (vencida)', cls: 'overdue' };
       if (diffDays === 0) return { text: 'Hoy', cls: 'today' };
-      if (diffDays === 1) return { text: 'Manana', cls: 'soon' };
+      if (diffDays === 1) return { text: 'Mañana', cls: 'soon' };
       if (diffDays <= 3) return { text: label + ' (' + diffDays + 'd)', cls: 'soon' };
       return { text: label, cls: '' };
     }
@@ -2307,7 +2307,7 @@
       resolveWaitingId = null;
       closeModal('modal-resolve');
 
-      const label = status === 'Next action' ? 'Proximas' : status === 'Some day' ? 'Algun dia' : 'Completada';
+      const label = status === 'Next action' ? 'Próximas' : status === 'Some day' ? 'Algún día' : 'Completada';
       showToast('Movida a ' + label, {
         commit: async () => {
           if (status === 'done') {
@@ -2740,7 +2740,7 @@
 
     function pickPomoTask() {
       const nextTasks = allTasks.filter(r => r.fields.Status === 'Next action');
-      if (nextTasks.length === 0) { alert('No hay proximas acciones'); return; }
+      if (nextTasks.length === 0) { alert('No hay próximas acciones'); return; }
 
       // Reuse a simple approach: show task titles in the process modal style
       const titles = nextTasks.map((t, i) => `${i + 1}. ${t.fields.Title}`).join('\n');
