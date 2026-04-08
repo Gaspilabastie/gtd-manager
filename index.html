@@ -636,6 +636,203 @@
       cursor: not-allowed;
     }
 
+    /* === WEEKLY REVIEW === */
+    .review-container {
+      display: none;
+      min-height: calc(100vh - 140px);
+      padding-bottom: 80px;
+    }
+
+    .review-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      border-bottom: 2px solid var(--black);
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .review-header h2 {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+
+    .review-header .header-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .review-progress {
+      height: 4px;
+      background: var(--border-light);
+      width: 100%;
+    }
+
+    .review-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    .review-steps-nav {
+      display: flex;
+      border-bottom: 2px solid var(--black);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .review-steps-nav button {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 4px;
+      font-family: var(--mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      color: var(--text-secondary);
+      border-right: 1px solid var(--border-light);
+    }
+
+    .review-steps-nav button:last-child {
+      border-right: none;
+    }
+
+    .review-steps-nav button.active {
+      background: var(--black);
+      color: var(--accent);
+    }
+
+    .review-steps-nav button.done {
+      color: var(--accent-dark);
+    }
+
+    .review-guidance {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 16px 16px 0;
+    }
+
+    .review-step-title {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      padding: 12px 16px 0;
+    }
+
+    .review-step-count {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-secondary);
+      padding: 4px 16px 8px;
+    }
+
+    .review-list {
+      padding: 0 16px 16px;
+    }
+
+    .review-nav-actions {
+      position: fixed;
+      bottom: 64px;
+      left: 0;
+      right: 0;
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-top: 2px solid var(--black);
+      z-index: 10;
+      max-width: 414px;
+      margin: 0 auto;
+    }
+
+    .review-nav-actions button {
+      flex: 1;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      border: 2px solid var(--black);
+      cursor: pointer;
+    }
+
+    .review-nav-actions .review-btn-prev {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .review-nav-actions .review-btn-next {
+      background: var(--black);
+      color: var(--accent);
+    }
+
+    .review-nav-actions button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .review-finish {
+      text-align: center;
+      padding: 48px 16px;
+    }
+
+    .review-finish h2 {
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .review-finish p {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .review-finish button {
+      padding: 14px 32px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: var(--black);
+      color: var(--accent);
+      border: 2px solid var(--black);
+      cursor: pointer;
+    }
+
+    .review-project-warning {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--danger);
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border: 1px solid var(--danger);
+      margin-left: 8px;
+    }
+
     /* === TOAST === */
     .toast {
       position: fixed;
@@ -1262,6 +1459,7 @@
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
       <span class="header-date">v1.9</span>
+      <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()">[CFG]</button>
     </div>
   </div>
@@ -1395,6 +1593,26 @@
         <div class="pomo-stat-label">Total min</div>
         <div class="pomo-stat-value" id="pomo-total-min">000</div>
       </div>
+    </div>
+  </div>
+
+  <!-- WEEKLY REVIEW -->
+  <div class="review-container" id="review-container">
+    <div class="review-header">
+      <div>
+        <span class="header-label">Review Semanal</span>
+        <h2>Paso <span id="review-step-num">01</span>/05</h2>
+      </div>
+      <button class="header-settings" onclick="closeWeeklyReview()">[X]</button>
+    </div>
+    <div class="review-progress">
+      <div class="review-progress-fill" id="review-progress-fill"></div>
+    </div>
+    <div class="review-steps-nav" id="review-steps-nav"></div>
+    <div id="review-step-content"></div>
+    <div class="review-nav-actions" id="review-nav-actions" style="display:none;">
+      <button class="review-btn-prev" id="review-prev" onclick="reviewPrev()">Anterior</button>
+      <button class="review-btn-next" id="review-next" onclick="reviewNext()">Siguiente</button>
     </div>
   </div>
 
@@ -2030,6 +2248,7 @@
     let currentProjectId = null;
     let projectsList = [];
     let allTasks = [];
+    let inboxItems = [];
 
     // === RENDER ===
     function renderInboxItem(record, index) {
@@ -2141,6 +2360,7 @@
         return oa - ob;
       });
       allTasks = tasks;
+      inboxItems = inbox;
       const activeProjects = projects.filter(r => r.fields.Status === 'Active');
       activeProjects.sort((a, b) => {
         const oa = a.fields.Order != null ? a.fields.Order : 9999;
@@ -2172,6 +2392,8 @@
       renderList('projects', activeProjects, renderProjectItem);
       // Update filter state
       updateFilterButtons();
+      // Refresh review step if active
+      if (reviewState.active) renderReviewStep(reviewState.currentStep);
     }
 
     function populateProjectSelects() {
@@ -2808,6 +3030,13 @@
 
       // Pomodoro
       document.getElementById('pomo-container').classList.toggle('visible', nav === 'pomodoro');
+
+      // Close review if open
+      if (reviewState.active) {
+        reviewState.active = false;
+        document.getElementById('review-container').style.display = 'none';
+        document.getElementById('review-nav-actions').style.display = 'none';
+      }
     }
 
     // === POMODORO ===
@@ -3114,6 +3343,162 @@
     // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
+    }
+
+    // === WEEKLY REVIEW ===
+    const REVIEW_STEPS = [
+      { id: 'inbox',    title: 'Vaciar Inbox',              label: 'Inbox' },
+      { id: 'next',     title: 'Revisar Proximas Acciones', label: 'Proximas' },
+      { id: 'waiting',  title: 'Revisar Esperando',         label: 'Esperando' },
+      { id: 'someday',  title: 'Revisar Algun Dia',         label: 'Algun dia' },
+      { id: 'projects', title: 'Revisar Proyectos',         label: 'Proyectos' },
+    ];
+
+    const REVIEW_GUIDANCE = [
+      'Procesa o elimina cada item del inbox.',
+      'Sigue vigente cada accion? Completala o movela.',
+      'Necesitas hacer seguimiento de algo?',
+      'Algo se volvio relevante? Algo deberia descartarse?',
+      'Cada proyecto activo tiene al menos una proxima accion?',
+    ];
+
+    let reviewState = {
+      active: false,
+      currentStep: 0,
+      stepsVisited: [false, false, false, false, false],
+    };
+
+    function openWeeklyReview() {
+      reviewState.active = true;
+      reviewState.currentStep = 0;
+      reviewState.stepsVisited = [false, false, false, false, false];
+
+      // Hide GTD elements
+      document.querySelector('.header').style.display = 'none';
+      document.querySelector('.stats').style.display = 'none';
+      document.querySelector('.sections-nav').style.display = 'none';
+      document.querySelectorAll('.task-section').forEach(s => s.style.display = 'none');
+      document.querySelector('.fab').style.display = 'none';
+      document.querySelector('.bottom-spacer').style.display = 'none';
+
+      // Show review
+      document.getElementById('review-container').style.display = 'block';
+      document.getElementById('review-nav-actions').style.display = 'flex';
+      renderReviewStep(0);
+    }
+
+    function closeWeeklyReview() {
+      reviewState.active = false;
+      document.getElementById('review-container').style.display = 'none';
+      document.getElementById('review-nav-actions').style.display = 'none';
+
+      // Restore GTD view
+      switchNav('gtd');
+      loadAll();
+    }
+
+    function getReviewItems(stepIndex) {
+      switch (stepIndex) {
+        case 0: return inboxItems;
+        case 1: return allTasks.filter(t => t.fields.Status === 'Next action');
+        case 2: return allTasks.filter(t => t.fields.Status === 'Waiting');
+        case 3: return allTasks.filter(t => t.fields.Status === 'Some day');
+        case 4: return projectsList.filter(p => p.fields.Status === 'Active');
+        default: return [];
+      }
+    }
+
+    function renderReviewStep(stepIndex) {
+      reviewState.currentStep = stepIndex;
+      reviewState.stepsVisited[stepIndex] = true;
+
+      const step = REVIEW_STEPS[stepIndex];
+      const items = getReviewItems(stepIndex);
+
+      // Update header
+      document.getElementById('review-step-num').textContent = String(stepIndex + 1).padStart(2, '0');
+
+      // Progress bar
+      const pct = ((stepIndex + 1) / REVIEW_STEPS.length) * 100;
+      document.getElementById('review-progress-fill').style.width = pct + '%';
+
+      // Step nav
+      const navHtml = REVIEW_STEPS.map((s, i) => {
+        let cls = '';
+        if (i === stepIndex) cls = 'active';
+        else if (reviewState.stepsVisited[i]) cls = 'done';
+        return `<button class="${cls}" onclick="reviewGoToStep(${i})">${String(i + 1).padStart(2, '0')} ${s.label}</button>`;
+      }).join('');
+      document.getElementById('review-steps-nav').innerHTML = navHtml;
+
+      // Content
+      let contentHtml = `<div class="review-step-title">${step.title}</div>`;
+      contentHtml += `<div class="review-step-count">${String(items.length).padStart(2, '0')} items</div>`;
+      contentHtml += `<div class="review-guidance">${REVIEW_GUIDANCE[stepIndex]}</div>`;
+      contentHtml += '<div class="review-list">';
+
+      if (items.length === 0) {
+        contentHtml += '<div class="empty-state" style="padding:24px 0;">Sin items</div>';
+      } else if (stepIndex === 0) {
+        contentHtml += items.map((r, i) => renderInboxItem(r, i)).join('');
+      } else if (stepIndex === 4) {
+        contentHtml += items.map(p => {
+          const name = p.fields.Name || '';
+          const nextActions = allTasks.filter(t => t.fields.Status === 'Next action' && t.fields.Project === name);
+          const warning = nextActions.length === 0 ? '<span class="review-project-warning">sin proxima accion</span>' : '';
+          return renderProjectItem(p) + warning;
+        }).join('');
+      } else {
+        contentHtml += items.map((r, i) => renderTaskItem(r, i)).join('');
+      }
+
+      contentHtml += '</div>';
+      document.getElementById('review-step-content').innerHTML = contentHtml;
+
+      // Nav buttons
+      document.getElementById('review-prev').disabled = stepIndex === 0;
+      const nextBtn = document.getElementById('review-next');
+      nextBtn.textContent = stepIndex === REVIEW_STEPS.length - 1 ? 'Finalizar' : 'Siguiente';
+    }
+
+    function reviewPrev() {
+      if (reviewState.currentStep > 0) {
+        renderReviewStep(reviewState.currentStep - 1);
+      }
+    }
+
+    function reviewNext() {
+      if (reviewState.currentStep < REVIEW_STEPS.length - 1) {
+        renderReviewStep(reviewState.currentStep + 1);
+      } else {
+        finishReview();
+      }
+    }
+
+    function reviewGoToStep(stepIndex) {
+      renderReviewStep(stepIndex);
+    }
+
+    function finishReview() {
+      localStorage.setItem('gtd-last-review', new Date().toISOString());
+
+      document.getElementById('review-step-num').textContent = '//';
+      document.getElementById('review-progress-fill').style.width = '100%';
+      document.getElementById('review-steps-nav').innerHTML = REVIEW_STEPS.map((s, i) =>
+        `<button class="done">${String(i + 1).padStart(2, '0')} ${s.label}</button>`
+      ).join('');
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      document.getElementById('review-step-content').innerHTML = `
+        <div class="review-finish">
+          <h2>[Review completa]</h2>
+          <p>${dateStr} // Sistema revisado</p>
+          <button onclick="closeWeeklyReview()">Volver a GTD</button>
+        </div>
+      `;
+      document.getElementById('review-nav-actions').style.display = 'none';
     }
 
     // === INIT ===
