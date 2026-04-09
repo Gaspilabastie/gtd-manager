@@ -979,6 +979,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
       padding: 10px 14px;
       background: var(--bg);
       border: 1px solid var(--border-light);
@@ -1771,7 +1772,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.13.1</span>
+      <span class="header-date">v1.13.2</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -2424,7 +2425,7 @@
       const contexts = getContexts();
       list.innerHTML = contexts.map((c, i) => `
         <div class="context-item">
-          <span>${escHtml(c)}</span>
+          <input type="text" class="context-name-input" value="${escHtml(c)}" data-index="${i}" onchange="renameContext(${i}, this.value)" style="flex:1;font-family:var(--mono);font-size:12px;border:none;background:transparent;padding:0;">
           <button class="context-remove" onclick="removeContext(${i})">x</button>
         </div>
       `).join('');
@@ -2440,6 +2441,24 @@
       contexts.push(val);
       saveContexts(contexts);
       input.value = '';
+      renderContextList();
+    }
+
+    function renameContext(index, newName) {
+      let val = newName.trim();
+      if (!val) return renderContextList();
+      if (!val.startsWith('@')) val = '@' + val;
+      const contexts = getContexts();
+      const oldName = contexts[index];
+      if (val === oldName) return;
+      if (contexts.includes(val)) return renderContextList();
+      contexts[index] = val;
+      // Update unavailable filter if the old name was there
+      if (unavailableContexts.has(oldName)) {
+        unavailableContexts.delete(oldName);
+        unavailableContexts.add(val);
+      }
+      saveContexts(contexts);
       renderContextList();
     }
 
