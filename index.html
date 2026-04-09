@@ -1113,15 +1113,24 @@
       color: var(--text-secondary);
     }
 
-    .ruleta-tasklist {
-      display: none;
+    .ruleta-toolbar-wrap {
+      position: relative;
       width: 100%;
       max-width: 360px;
-      margin-bottom: 16px;
-      border: 1px solid var(--border-light);
+    }
+
+    .ruleta-tasklist {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 5;
+      border: 2px solid var(--black);
       background: var(--surface);
-      max-height: 200px;
+      max-height: 250px;
       overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     .ruleta-tasklist.visible {
@@ -1783,7 +1792,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.14</span>
+      <span class="header-date">v1.14.1</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -1922,15 +1931,17 @@
   <!-- POMODORO Section -->
   <!-- Ruleta -->
   <div class="ruleta-container" id="ruleta-container">
-    <div class="ruleta-toolbar">
-      <div class="ruleta-header">Proxima accion // Aleatoria</div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="filter-btn" id="ruleta-weight-btn" onclick="toggleRuletaWeight()" title="Pesar por urgencia"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
-        <button class="filter-btn" id="filter-btn-ruleta" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
-        <button class="filter-btn" id="ruleta-list-toggle" onclick="toggleRuletaList()" title="Editar tareas"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+    <div class="ruleta-toolbar-wrap">
+      <div class="ruleta-toolbar">
+        <div class="ruleta-header">Proxima accion // Aleatoria</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="filter-btn" id="ruleta-weight-btn" onclick="toggleRuletaWeight()" title="Pesar por urgencia"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
+          <button class="filter-btn" id="filter-btn-ruleta" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
+          <button class="filter-btn" id="ruleta-list-toggle" onclick="toggleRuletaList()" title="Editar tareas"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+        </div>
       </div>
+      <div class="ruleta-tasklist" id="ruleta-tasklist"></div>
     </div>
-    <div class="ruleta-tasklist" id="ruleta-tasklist"></div>
     <div class="ruleta-wheel-wrap" id="ruleta-wheel-wrap">
       <div class="ruleta-pointer"></div>
       <canvas class="ruleta-canvas" id="ruleta-canvas" width="600" height="600"></canvas>
