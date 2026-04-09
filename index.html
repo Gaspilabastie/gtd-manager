@@ -1206,16 +1206,18 @@
       z-index: 2;
       width: 0;
       height: 0;
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-top: 20px solid var(--black);
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 22px solid var(--accent);
+      filter: drop-shadow(0 2px 4px rgba(0, 240, 208, 0.4));
     }
 
     .ruleta-canvas {
       width: 100%;
       height: 100%;
-      border: 2px solid var(--black);
+      border: 3px solid var(--accent);
       border-radius: 50%;
+      box-shadow: 0 0 20px rgba(0, 240, 208, 0.15);
     }
 
     .ruleta-center-btn {
@@ -1226,9 +1228,9 @@
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      border: 2px solid var(--black);
-      background: var(--accent);
-      color: var(--black);
+      border: 2px solid var(--accent);
+      background: var(--black);
+      color: var(--accent);
       font-family: var(--mono);
       font-size: 9px;
       font-weight: 700;
@@ -1237,6 +1239,7 @@
       cursor: pointer;
       z-index: 2;
       transition: transform 0.15s;
+      box-shadow: 0 0 12px rgba(0, 240, 208, 0.3);
     }
 
     .ruleta-center-btn:active {
@@ -1793,7 +1796,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.15.10</span>
+      <span class="header-date">v1.16</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -3508,8 +3511,8 @@
         const slice = WHEEL_SLICES[i % 2];
         ctx.fillStyle = slice.bg;
         ctx.fill();
-        ctx.strokeStyle = '#2a2a2a';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#00f0d0';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         ctx.save();
@@ -3542,9 +3545,9 @@
 
       ctx.beginPath();
       ctx.arc(cx, cy, 40, 0, Math.PI * 2);
-      ctx.fillStyle = '#f0f0ec';
+      ctx.fillStyle = '#0a0a0a';
       ctx.fill();
-      ctx.strokeStyle = '#0a0a0a';
+      ctx.strokeStyle = '#00f0d0';
       ctx.lineWidth = 2;
       ctx.stroke();
     }
