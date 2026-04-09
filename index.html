@@ -1792,7 +1792,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.14.3</span>
+      <span class="header-date">v1.14.4</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -3431,20 +3431,10 @@
     let ruletaSpinning = false;
     let ruletaExcluded = new Set(); // manually excluded task IDs
     let ruletaWeighted = false; // weight by deadline urgency
-    // Fixed palette with good contrast between adjacent slices
     const WHEEL_PALETTE = [
+      { bg: '#0a0a0a', text: '#00f0d0' },
       { bg: '#00f0d0', text: '#0a0a0a' },
-      { bg: '#6c5ce7', text: '#f0f0ec' },
-      { bg: '#f39c12', text: '#0a0a0a' },
-      { bg: '#e84393', text: '#f0f0ec' },
-      { bg: '#27ae60', text: '#f0f0ec' },
-      { bg: '#4a90d9', text: '#f0f0ec' },
-      { bg: '#e74c3c', text: '#f0f0ec' },
-      { bg: '#1abc9c', text: '#0a0a0a' },
-      { bg: '#9b59b6', text: '#f0f0ec' },
-      { bg: '#f1c40f', text: '#0a0a0a' },
-      { bg: '#2980b9', text: '#f0f0ec' },
-      { bg: '#e67e22', text: '#f0f0ec' },
+      { bg: '#1a1a1a', text: '#f0f0ec' },
     ];
 
     function getRuletaTasks() {
@@ -3521,17 +3511,6 @@
         ctx.strokeStyle = '#f0f0ec';
         ctx.lineWidth = 2;
         ctx.stroke();
-
-        // Project color accent on outer edge
-        const projectColor = task.fields.Project ? getProjectColor(task.fields.Project) : null;
-        if (projectColor) {
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, startAngle, endAngle);
-          ctx.arc(cx, cy, r - 8, endAngle, startAngle, true);
-          ctx.closePath();
-          ctx.fillStyle = projectColor;
-          ctx.fill();
-        }
 
         ctx.save();
         ctx.translate(cx, cy);
