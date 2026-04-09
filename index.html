@@ -1772,7 +1772,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.13.2</span>
+      <span class="header-date">v1.13.3</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -2444,7 +2444,7 @@
       renderContextList();
     }
 
-    function renameContext(index, newName) {
+    async function renameContext(index, newName) {
       let val = newName.trim();
       if (!val) return renderContextList();
       if (!val.startsWith('@')) val = '@' + val;
@@ -2460,6 +2460,25 @@
       }
       saveContexts(contexts);
       renderContextList();
+      // Update all tasks in Airtable with the old context name
+      const tasksToUpdate = allTasks.filter(t => t.fields.Context === oldName);
+      if (tasksToUpdate.length > 0) {
+        // Airtable batch update supports up to 10 records per request
+        for (let i = 0; i < tasksToUpdate.length; i += 10) {
+          const batch = tasksToUpdate.slice(i, i + 10);
+          const records = batch.map(t => ({ id: t.id, fields: { Context: val } }));
+          if (!isOnline) {
+            batch.forEach(t => enqueueOffline({ method: 'PATCH', tableId: CONFIG.tables.tasks, recordId: t.id, fields: { Context: val } }));
+          } else {
+            await fetch(apiUrl(CONFIG.tables.tasks), {
+              method: 'PATCH',
+              headers: headers(),
+              body: JSON.stringify({ records, typecast: true })
+            });
+          }
+        }
+        loadAll();
+      }
     }
 
     function removeContext(index) {
