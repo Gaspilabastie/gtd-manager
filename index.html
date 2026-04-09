@@ -3359,15 +3359,17 @@
       // Pick winner first, then calculate target angle
       const winnerIndex = Math.floor(Math.random() * nextTasks.length);
       const sliceAngle = (Math.PI * 2) / nextTasks.length;
-      // Pointer is at top (270deg = -PI/2). We need the winner slice center at the top.
-      // The slice center is at winnerIndex * sliceAngle + sliceAngle/2 from the current ruletaAngle.
-      // We want that to align with -PI/2 (top).
-      const targetSliceCenter = winnerIndex * sliceAngle + sliceAngle / 2;
-      const extraSpins = (4 + Math.random() * 3) * Math.PI * 2; // 4-7 full rotations
-      const targetAngle = -(-Math.PI / 2) - targetSliceCenter + extraSpins;
-      // We spin by adding to ruletaAngle
+      // Pointer is at top (-PI/2 in canvas coords).
+      // Final ruletaAngle must satisfy: finalAngle + winnerIndex * sliceAngle + sliceAngle/2 = -PI/2 (mod 2PI)
+      // So: finalAngle = -PI/2 - winnerIndex * sliceAngle - sliceAngle/2
+      const targetBase = -Math.PI / 2 - winnerIndex * sliceAngle - sliceAngle / 2;
       const startAngle = ruletaAngle;
-      const totalRotation = targetAngle - (startAngle % (Math.PI * 2)) + extraSpins;
+      // Add enough full spins to go forward from current position
+      let finalAngle = targetBase;
+      while (finalAngle <= startAngle + Math.PI * 4) finalAngle += Math.PI * 2;
+      // Add 3-6 extra spins for drama
+      finalAngle += (3 + Math.floor(Math.random() * 4)) * Math.PI * 2;
+      const totalRotation = finalAngle - startAngle;
 
       const duration = 3000 + Math.random() * 1500;
       const startTime = Date.now();
