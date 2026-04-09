@@ -1252,19 +1252,28 @@
       pointer-events: none;
     }
 
-    .ruleta-result {
+    .ruleta-bottom {
       width: 100%;
       max-width: 380px;
-      height: 70px;
-      overflow: hidden;
+      flex-shrink: 0;
+      height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ruleta-result {
+      width: 100%;
+      height: 52px;
       border: 1px solid var(--border-light);
       background: var(--surface);
-      padding: 12px;
+      padding: 8px 12px;
       text-align: center;
-      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
 
     .ruleta-result.active {
@@ -1809,7 +1818,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.16.4</span>
+      <span class="header-date">v1.16.5</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -1964,12 +1973,14 @@
       <canvas class="ruleta-canvas" id="ruleta-canvas" width="600" height="600"></canvas>
       <button class="ruleta-center-btn" id="ruleta-center-btn" onclick="spinRuleta()">Girar</button>
     </div>
-    <div class="ruleta-result" id="ruleta-result">
-      <div class="ruleta-empty">Gira la rueda</div>
-    </div>
-    <div class="ruleta-actions" id="ruleta-actions">
-      <button class="ruleta-complete-btn" onclick="completeRuletaTask()">Completar</button>
-      <button class="ruleta-complete-btn ruleta-pomo-btn" onclick="startPomoFromRuleta()">Pomodoro</button>
+    <div class="ruleta-bottom" id="ruleta-bottom">
+      <div class="ruleta-result" id="ruleta-result">
+        <div class="ruleta-empty">Gira la rueda</div>
+      </div>
+      <div class="ruleta-actions" id="ruleta-actions">
+        <button class="ruleta-complete-btn" onclick="completeRuletaTask()">Completar</button>
+        <button class="ruleta-complete-btn ruleta-pomo-btn" onclick="startPomoFromRuleta()">Pomodoro</button>
+      </div>
     </div>
   </div>
 
