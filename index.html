@@ -1296,6 +1296,17 @@
       border-color: var(--black);
     }
 
+    .ruleta-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .ruleta-pomo-btn {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
     /* === PROJECT DETAIL VIEW === */
     .project-detail-view {
       display: none;
@@ -1772,7 +1783,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.13.3</span>
+      <span class="header-date">v1.14</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -1914,7 +1925,7 @@
     <div class="ruleta-toolbar">
       <div class="ruleta-header">Proxima accion // Aleatoria</div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="filter-btn sort-btn" id="sort-btn-ruleta" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
+        <button class="filter-btn" id="ruleta-weight-btn" onclick="toggleRuletaWeight()" title="Pesar por urgencia"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
         <button class="filter-btn" id="filter-btn-ruleta" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
         <button class="filter-btn" id="ruleta-list-toggle" onclick="toggleRuletaList()" title="Editar tareas"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
       </div>
@@ -1926,7 +1937,10 @@
       <button class="ruleta-center-btn" id="ruleta-center-btn" onclick="spinRuleta()">Girar</button>
     </div>
     <div class="ruleta-result" id="ruleta-result"></div>
-    <button class="ruleta-complete-btn" id="ruleta-complete-btn" onclick="completeRuletaTask()">Completar tarea</button>
+    <div class="ruleta-actions" id="ruleta-actions" style="display:none;">
+      <button class="ruleta-complete-btn" style="display:inline-block" onclick="completeRuletaTask()">Completar</button>
+      <button class="ruleta-complete-btn ruleta-pomo-btn" style="display:inline-block" onclick="startPomoFromRuleta()">Pomodoro</button>
+    </div>
   </div>
 
   <div class="pomo-container" id="pomo-container">
@@ -3405,12 +3419,41 @@
     let ruletaAngle = 0;
     let ruletaSpinning = false;
     let ruletaExcluded = new Set(); // manually excluded task IDs
+    let ruletaWeighted = false; // weight by deadline urgency
     const WHEEL_COLORS = ['#00f0d0', '#0a0a0a', '#4a90d9', '#0a0a0a', '#6c5ce7', '#0a0a0a', '#e84393', '#0a0a0a', '#f39c12', '#0a0a0a', '#27ae60', '#0a0a0a', '#e74c3c', '#0a0a0a', '#95a5a6', '#0a0a0a'];
 
     function getRuletaTasks() {
       const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
       const filtered = filterTasks(nextTasks);
       return filtered.filter(t => !ruletaExcluded.has(t.id));
+    }
+
+    function getTaskWeight(task) {
+      if (!ruletaWeighted) return 1;
+      const d = task.fields.Deadline;
+      if (!d) return 1;
+      if (d === ASAP_DATE) return 5;
+      const deadline = new Date(d + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diffDays = Math.floor((deadline - today) / 86400000);
+      if (diffDays < 0) return 6;   // overdue
+      if (diffDays === 0) return 4;  // today
+      if (diffDays <= 3) return 3;   // soon
+      if (diffDays <= 7) return 2;   // this week
+      return 1;                      // future
+    }
+
+    function getRuletaWeights(tasks) {
+      const weights = tasks.map(t => getTaskWeight(t));
+      const total = weights.reduce((a, b) => a + b, 0);
+      return { weights, total };
+    }
+
+    function toggleRuletaWeight() {
+      ruletaWeighted = !ruletaWeighted;
+      document.getElementById('ruleta-weight-btn').classList.toggle('active', ruletaWeighted);
+      if (!ruletaSpinning) drawWheel();
     }
 
     function drawWheel() {
@@ -3434,11 +3477,14 @@
         return;
       }
 
-      const sliceAngle = (Math.PI * 2) / tasks.length;
+      const { weights, total } = getRuletaWeights(tasks);
+      let angleOffset = ruletaAngle;
 
       tasks.forEach((task, i) => {
-        const startAngle = ruletaAngle + i * sliceAngle;
-        const endAngle = startAngle + sliceAngle;
+        const sliceAngle = (weights[i] / total) * Math.PI * 2;
+        const startAngle = angleOffset;
+        const endAngle = angleOffset + sliceAngle;
+        angleOffset = endAngle;
 
         ctx.beginPath();
         ctx.moveTo(cx, cy);
@@ -3528,12 +3574,24 @@
       ruletaSpinning = true;
       document.getElementById('ruleta-center-btn').classList.add('spinning');
       document.getElementById('ruleta-result').classList.remove('visible');
-      document.getElementById('ruleta-complete-btn').style.display = 'none';
+      document.getElementById('ruleta-actions').style.display = 'none';
       ruletaSelectedTask = null;
 
-      const winnerIndex = Math.floor(Math.random() * tasks.length);
-      const sliceAngle = (Math.PI * 2) / tasks.length;
-      const targetBase = -Math.PI / 2 - winnerIndex * sliceAngle - sliceAngle / 2;
+      // Weighted random selection
+      const { weights, total } = getRuletaWeights(tasks);
+      let rand = Math.random() * total;
+      let winnerIndex = 0;
+      for (let i = 0; i < weights.length; i++) {
+        rand -= weights[i];
+        if (rand <= 0) { winnerIndex = i; break; }
+      }
+      // Calculate angle to winner's slice center (weighted slices)
+      let angleToCenter = 0;
+      for (let i = 0; i < winnerIndex; i++) {
+        angleToCenter += (weights[i] / total) * Math.PI * 2;
+      }
+      angleToCenter += ((weights[winnerIndex] / total) * Math.PI * 2) / 2;
+      const targetBase = -Math.PI / 2 - angleToCenter;
       const startAngle = ruletaAngle;
       let finalAngle = targetBase;
       while (finalAngle <= startAngle + Math.PI * 4) finalAngle += Math.PI * 2;
@@ -3581,7 +3639,7 @@
         ${meta ? `<div class="ruleta-result-meta">${meta}</div>` : ''}
       `;
       result.classList.add('visible');
-      document.getElementById('ruleta-complete-btn').style.display = '';
+      document.getElementById('ruleta-actions').style.display = '';
     }
 
     function completeRuletaTask() {
@@ -3589,7 +3647,7 @@
       const id = ruletaSelectedTask.id;
       const title = ruletaSelectedTask.fields.Title || 'Tarea';
       ruletaSelectedTask = null;
-      document.getElementById('ruleta-complete-btn').style.display = 'none';
+      document.getElementById('ruleta-actions').style.display = 'none';
       document.getElementById('ruleta-result').classList.remove('visible');
 
       showToast(`"${title}" completada`, {
@@ -3603,6 +3661,32 @@
         undo: () => {}
       });
       loadAll();
+    }
+
+    function startPomoFromRuleta() {
+      if (!ruletaSelectedTask) return;
+      const task = ruletaSelectedTask;
+      ruletaSelectedTask = null;
+      document.getElementById('ruleta-actions').style.display = 'none';
+      document.getElementById('ruleta-result').classList.remove('visible');
+
+      // Link task to pomodoro
+      pomoState.linkedTask = task.id;
+      const link = document.getElementById('pomo-task-link');
+      link.textContent = task.fields.Title || '';
+      link.classList.add('linked');
+
+      // Reset pomodoro if not running
+      if (!pomoState.running) {
+        pomoState.phase = 0;
+        const ps = getPomoSettings();
+        pomoState.remaining = ps.work * 60;
+        pomoState.total = ps.work * 60;
+        updatePomoDisplay();
+      }
+
+      // Switch to pomodoro tab
+      switchNav('pomodoro');
     }
 
     // === DRAG & DROP ===
