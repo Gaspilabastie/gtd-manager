@@ -454,6 +454,29 @@
       white-space: nowrap;
     }
 
+    .project-preview {
+      border-top: 1px solid var(--border-light);
+      margin-top: 6px;
+      padding-top: 8px;
+    }
+
+    .project-preview-task {
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-preview-more {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
     .project-empty {
       font-family: var(--mono);
       font-size: 9px;
@@ -1069,7 +1092,7 @@
       display: none;
       flex-direction: column;
       align-items: center;
-      padding: 40px 16px;
+      padding: 24px 16px;
       min-height: calc(100vh - 140px);
     }
 
@@ -1083,39 +1106,94 @@
       text-transform: uppercase;
       letter-spacing: 2px;
       color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .ruleta-wheel-wrap {
+      position: relative;
+      width: 300px;
+      height: 300px;
       margin-bottom: 24px;
     }
 
-    .ruleta-display {
-      width: 100%;
-      max-width: 360px;
-      min-height: 180px;
-      border: 2px solid var(--black);
-      background: var(--surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      margin-bottom: 32px;
-      position: relative;
-      overflow: hidden;
+    .ruleta-pointer {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 20px solid var(--black);
     }
 
-    .ruleta-task-name {
-      font-size: 22px;
+    .ruleta-canvas {
+      width: 300px;
+      height: 300px;
+      border: 2px solid var(--black);
+      border-radius: 50%;
+    }
+
+    .ruleta-center-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid var(--black);
+      background: var(--accent);
+      color: var(--black);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      z-index: 2;
+      transition: transform 0.15s;
+    }
+
+    .ruleta-center-btn:active {
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+
+    .ruleta-center-btn.spinning {
+      pointer-events: none;
+    }
+
+    .ruleta-result {
+      width: 100%;
+      max-width: 360px;
+      border: 2px solid var(--accent);
+      background: var(--surface);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .ruleta-result.visible {
+      display: block;
+    }
+
+    .ruleta-result-name {
+      font-size: 18px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: -0.5px;
-      text-align: center;
       line-height: 1.3;
     }
 
-    .ruleta-task-meta {
+    .ruleta-result-meta {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       justify-content: center;
-      margin-top: 12px;
+      margin-top: 8px;
     }
 
     .ruleta-empty {
@@ -1127,59 +1205,7 @@
       text-align: center;
     }
 
-    .ruleta-spin-btn {
-      width: 80px;
-      height: 80px;
-      border: 2px solid var(--black);
-      background: var(--accent);
-      color: var(--black);
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s;
-    }
-
-    .ruleta-spin-btn:active {
-      transform: scale(0.95);
-    }
-
-    .ruleta-spin-btn.spinning {
-      pointer-events: none;
-      animation: ruleta-pulse 0.15s ease-in-out infinite alternate;
-    }
-
-    @keyframes ruleta-pulse {
-      from { transform: scale(1); }
-      to { transform: scale(0.95); }
-    }
-
-    .ruleta-shuffle {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .ruleta-shuffle .ruleta-task-name {
-      animation: ruleta-flip 0.1s steps(1) infinite;
-    }
-
-    @keyframes ruleta-flip {
-      0% { opacity: 1; }
-      50% { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
-
     .ruleta-complete-btn {
-      margin-top: 16px;
       background: none;
       border: 1px solid var(--border-light);
       color: var(--text-secondary);
@@ -1189,6 +1215,7 @@
       letter-spacing: 1px;
       padding: 8px 16px;
       cursor: pointer;
+      display: none;
     }
 
     .ruleta-complete-btn:active {
@@ -1735,7 +1762,11 @@
     <div id="projects-list-view">
       <div class="section-header">
         <h2>Proyectos activos</h2>
-        <span class="section-count" id="count-projects"></span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="filter-btn sort-btn" id="sort-btn-projects" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
+          <button class="filter-btn" id="filter-btn-projects" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
+          <span class="section-count" id="count-projects"></span>
+        </div>
       </div>
       <div class="task-list" id="list-projects">
         <div class="loading">Cargando...</div>
@@ -1750,6 +1781,8 @@
       <div class="project-detail-header">
         <span class="project-detail-title" id="pv-title"></span>
         <div class="project-detail-actions">
+          <button class="filter-btn sort-btn" id="sort-btn-pv" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
+          <button class="filter-btn" id="filter-btn-pv" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
           <button class="project-detail-cfg" onclick="toggleProjectConfig()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
         </div>
       </div>
@@ -1807,11 +1840,13 @@
   <!-- Ruleta -->
   <div class="ruleta-container" id="ruleta-container">
     <div class="ruleta-header">Proxima accion // Aleatoria</div>
-    <div class="ruleta-display" id="ruleta-display">
-      <div class="ruleta-empty">Pulsa girar para elegir una tarea al azar</div>
+    <div class="ruleta-wheel-wrap" id="ruleta-wheel-wrap">
+      <div class="ruleta-pointer"></div>
+      <canvas class="ruleta-canvas" id="ruleta-canvas" width="600" height="600"></canvas>
+      <button class="ruleta-center-btn" id="ruleta-center-btn" onclick="spinRuleta()">Girar</button>
     </div>
-    <button class="ruleta-spin-btn" id="ruleta-spin-btn" onclick="spinRuleta()">Girar</button>
-    <button class="ruleta-complete-btn" id="ruleta-complete-btn" style="display:none" onclick="completeRuletaTask()">Completar tarea</button>
+    <div class="ruleta-result" id="ruleta-result"></div>
+    <button class="ruleta-complete-btn" id="ruleta-complete-btn" onclick="completeRuletaTask()">Completar tarea</button>
   </div>
 
   <div class="pomo-container" id="pomo-container">
@@ -2174,6 +2209,43 @@
       renderList('next', sortTasks(filterTasks(nextTasks)), renderTaskItem);
       renderList('waiting', sortTasks(filterTasks(waitingTasks)), renderTaskItem);
       renderList('someday', sortTasks(filterTasks(somedayTasks)), renderTaskItem);
+
+      // Re-render projects (filter: only show projects with matching tasks, sort: by most urgent task)
+      let activeProjects = projectsList.filter(r => r.fields.Status === 'Active');
+      if (hasActiveFilter()) {
+        activeProjects = activeProjects.filter(p => {
+          const tasks = allTasks.filter(t => t.fields.Project === p.fields.Name);
+          return filterTasks(tasks).length > 0;
+        });
+      }
+      if (sortByDeadline) {
+        activeProjects = [...activeProjects].sort((a, b) => {
+          const aTasks = allTasks.filter(t => t.fields.Project === a.fields.Name);
+          const bTasks = allTasks.filter(t => t.fields.Project === b.fields.Name);
+          const aDeadline = getMostUrgentDeadline(filterTasks(aTasks));
+          const bDeadline = getMostUrgentDeadline(filterTasks(bTasks));
+          if (aDeadline === ASAP_DATE && bDeadline !== ASAP_DATE) return -1;
+          if (bDeadline === ASAP_DATE && aDeadline !== ASAP_DATE) return 1;
+          if (!aDeadline && bDeadline) return 1;
+          if (aDeadline && !bDeadline) return -1;
+          if (!aDeadline && !bDeadline) return 0;
+          return aDeadline.localeCompare(bDeadline);
+        });
+      } else {
+        activeProjects.sort((a, b) => {
+          const oa = a.fields.Order != null ? a.fields.Order : 9999;
+          const ob = b.fields.Order != null ? b.fields.Order : 9999;
+          return oa - ob;
+        });
+      }
+      renderList('projects', activeProjects, renderProjectItem);
+      document.getElementById('count-projects').textContent = String(activeProjects.length).padStart(2, '0');
+
+      // Re-render project detail view if open
+      if (currentProjectViewId) {
+        const record = projectsList.find(r => r.id === currentProjectViewId);
+        if (record) renderProjectTasks(record.fields.Name || '');
+      }
     }
 
     // === SORT BY DEADLINE ===
@@ -2185,6 +2257,17 @@
         btn.classList.toggle('active', sortByDeadline);
       });
       applyFilter();
+    }
+
+    function getMostUrgentDeadline(tasks) {
+      let most = null;
+      for (const t of tasks) {
+        const d = t.fields.Deadline || '';
+        if (!d) continue;
+        if (d === ASAP_DATE) return ASAP_DATE;
+        if (!most || d < most) most = d;
+      }
+      return most;
     }
 
     function sortTasks(tasks) {
@@ -2544,8 +2627,20 @@
     function renderProjectItem(record) {
       const f = record.fields;
       const name = f.Name || '';
-      const tasks = allTasks.filter(t => t.fields.Project === name);
+      const allProjectTasks = allTasks.filter(t => t.fields.Project === name);
+      const filtered = sortTasks(filterTasks(allProjectTasks));
       const color = f.Color || '#00f0d0';
+      let preview = '';
+      if (allProjectTasks.length === 0) {
+        preview = '<div class="project-preview"><div class="project-preview-more">Sin tareas</div></div>';
+      } else if (filtered.length === 0) {
+        preview = '<div class="project-preview"><div class="project-preview-more">Sin tareas con el filtro actual</div></div>';
+      } else {
+        preview = `<div class="project-preview">
+          <div class="project-preview-task">${escHtml(filtered[0].fields.Title || '')}</div>
+          ${filtered.length > 1 ? `<div class="project-preview-more">+ ${filtered.length - 1} más</div>` : ''}
+        </div>`;
+      }
       return `
         <div class="project-item" data-id="${record.id}" data-table="projects" onclick="openProjectView('${record.id}')">
           <div class="project-color-bar" style="background:${color}"></div>
@@ -2553,8 +2648,9 @@
             <div>
               <div class="project-name">${escHtml(name)}</div>
             </div>
-            <div class="project-count">${String(tasks.length).padStart(2, '0')}</div>
+            <div class="project-count">${String(allProjectTasks.length).padStart(2, '0')}</div>
           </div>
+          ${preview}
         </div>`;
     }
 
@@ -2923,11 +3019,17 @@
     }
 
     function renderProjectTasks(projectName) {
-      const tasks = allTasks.filter(t => t.fields.Project === projectName);
+      const rawTasks = allTasks.filter(t => t.fields.Project === projectName);
+      const tasks = sortTasks(filterTasks(rawTasks));
       const container = document.getElementById('pv-tasklist');
 
-      if (tasks.length === 0) {
+      if (rawTasks.length === 0) {
         container.innerHTML = '<div class="project-empty" style="padding:16px 0">Sin tareas asignadas</div>';
+        return;
+      }
+
+      if (tasks.length === 0) {
+        container.innerHTML = '<div class="project-empty" style="padding:16px 0">Sin tareas con el filtro actual</div>';
         return;
       }
 
@@ -3170,59 +3272,147 @@
 
     // === RULETA ===
     let ruletaSelectedTask = null;
+    let ruletaAngle = 0;
+    let ruletaSpinning = false;
+    const WHEEL_COLORS = ['#00f0d0', '#0a0a0a', '#4a90d9', '#0a0a0a', '#6c5ce7', '#0a0a0a', '#e84393', '#0a0a0a', '#f39c12', '#0a0a0a', '#27ae60', '#0a0a0a', '#e74c3c', '#0a0a0a', '#95a5a6', '#0a0a0a'];
 
-    function spinRuleta() {
+    function drawWheel() {
+      const canvas = document.getElementById('ruleta-canvas');
+      const ctx = canvas.getContext('2d');
       const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
+      const cx = 300, cy = 300, r = 290;
+
+      ctx.clearRect(0, 0, 600, 600);
+
       if (nextTasks.length === 0) {
-        document.getElementById('ruleta-display').innerHTML =
-          '<div class="ruleta-empty">No hay proximas acciones disponibles</div>';
+        ctx.fillStyle = '#e8e8e3';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#6b6b65';
+        ctx.font = '700 20px "Space Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('SIN TAREAS', cx, cy);
         return;
       }
 
-      const btn = document.getElementById('ruleta-spin-btn');
-      const display = document.getElementById('ruleta-display');
-      btn.classList.add('spinning');
+      const sliceAngle = (Math.PI * 2) / nextTasks.length;
+
+      nextTasks.forEach((task, i) => {
+        const startAngle = ruletaAngle + i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        // Draw slice
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.closePath();
+        const colorIdx = i % WHEEL_COLORS.length;
+        ctx.fillStyle = WHEEL_COLORS[colorIdx];
+        ctx.fill();
+        ctx.strokeStyle = '#f0f0ec';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw text
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        const isDark = ctx.fillStyle === '#0a0a0a';
+        ctx.fillStyle = isDark ? '#f0f0ec' : '#0a0a0a';
+        const maxLen = nextTasks.length <= 6 ? 18 : nextTasks.length <= 12 ? 12 : 8;
+        const fontSize = nextTasks.length <= 6 ? 18 : nextTasks.length <= 12 ? 14 : 11;
+        ctx.font = `700 ${fontSize}px "Inter", sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        let title = task.fields.Title || '';
+        if (title.length > maxLen) title = title.substring(0, maxLen - 1) + '…';
+        ctx.fillText(title, r - 20, 0);
+        ctx.restore();
+      });
+
+      // Inner ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, 40, 0, Math.PI * 2);
+      ctx.fillStyle = '#f0f0ec';
+      ctx.fill();
+      ctx.strokeStyle = '#0a0a0a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function spinRuleta() {
+      if (ruletaSpinning) return;
+      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
+      if (nextTasks.length === 0) {
+        drawWheel();
+        return;
+      }
+
+      ruletaSpinning = true;
+      document.getElementById('ruleta-center-btn').classList.add('spinning');
+      document.getElementById('ruleta-result').classList.remove('visible');
       document.getElementById('ruleta-complete-btn').style.display = 'none';
       ruletaSelectedTask = null;
 
-      let shuffleCount = 0;
-      const totalShuffles = 15 + Math.floor(Math.random() * 10);
-      const baseInterval = 60;
+      // Pick winner first, then calculate target angle
+      const winnerIndex = Math.floor(Math.random() * nextTasks.length);
+      const sliceAngle = (Math.PI * 2) / nextTasks.length;
+      // Pointer is at top (270deg = -PI/2). We need the winner slice center at the top.
+      // The slice center is at winnerIndex * sliceAngle + sliceAngle/2 from the current ruletaAngle.
+      // We want that to align with -PI/2 (top).
+      const targetSliceCenter = winnerIndex * sliceAngle + sliceAngle / 2;
+      const extraSpins = (4 + Math.random() * 3) * Math.PI * 2; // 4-7 full rotations
+      const targetAngle = -(-Math.PI / 2) - targetSliceCenter + extraSpins;
+      // We spin by adding to ruletaAngle
+      const startAngle = ruletaAngle;
+      const totalRotation = targetAngle - (startAngle % (Math.PI * 2)) + extraSpins;
 
-      function shuffle() {
-        const randomTask = nextTasks[Math.floor(Math.random() * nextTasks.length)];
-        display.innerHTML = `<div><div class="ruleta-task-name">${escHtml(randomTask.fields.Title || '')}</div></div>`;
-        shuffleCount++;
+      const duration = 3000 + Math.random() * 1500;
+      const startTime = Date.now();
 
-        if (shuffleCount < totalShuffles) {
-          const delay = baseInterval + (shuffleCount * shuffleCount * 2);
-          setTimeout(shuffle, delay);
+      function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const ease = 1 - Math.pow(1 - progress, 3);
+        ruletaAngle = startAngle + totalRotation * ease;
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
         } else {
-          // Final selection
-          const selected = nextTasks[Math.floor(Math.random() * nextTasks.length)];
-          ruletaSelectedTask = selected;
-          const f = selected.fields;
-          let meta = '';
-          if (f.Project) {
-            const pColor = getProjectColor(f.Project);
-            const pStyle = pColor ? `background:${pColor};border-color:${pColor};color:#0a0a0a` : '';
-            meta += `<span class="tag tag-project" style="${pStyle}">${escHtml(f.Project)}</span>`;
-          }
-          if (f.Context) meta += `<span class="tag tag-context">${escHtml(f.Context)}</span>`;
-          const dl = formatDeadline(f.Deadline);
-          if (dl) meta += `<span class="tag-deadline ${dl.cls}">${dl.text}</span>`;
-          display.innerHTML = `<div>
-            <div class="ruleta-task-name">${escHtml(f.Title || '')}</div>
-            ${meta ? `<div class="ruleta-task-meta">${meta}</div>` : ''}
-          </div>`;
-          display.style.borderColor = 'var(--accent)';
-          setTimeout(() => { display.style.borderColor = 'var(--black)'; }, 1500);
-          btn.classList.remove('spinning');
-          document.getElementById('ruleta-complete-btn').style.display = '';
+          // Done
+          ruletaSpinning = false;
+          document.getElementById('ruleta-center-btn').classList.remove('spinning');
+          ruletaSelectedTask = nextTasks[winnerIndex];
+          showRuletaResult(ruletaSelectedTask);
         }
       }
 
-      shuffle();
+      animate();
+    }
+
+    function showRuletaResult(task) {
+      const f = task.fields;
+      let meta = '';
+      if (f.Project) {
+        const pColor = getProjectColor(f.Project);
+        const pStyle = pColor ? `background:${pColor};border-color:${pColor};color:#0a0a0a` : '';
+        meta += `<span class="tag tag-project" style="${pStyle}">${escHtml(f.Project)}</span>`;
+      }
+      if (f.Context) meta += `<span class="tag tag-context">${escHtml(f.Context)}</span>`;
+      const dl = formatDeadline(f.Deadline);
+      if (dl) meta += `<span class="tag-deadline ${dl.cls}">${dl.text}</span>`;
+
+      const result = document.getElementById('ruleta-result');
+      result.innerHTML = `
+        <div class="ruleta-result-name">${escHtml(f.Title || '')}</div>
+        ${meta ? `<div class="ruleta-result-meta">${meta}</div>` : ''}
+      `;
+      result.classList.add('visible');
+      document.getElementById('ruleta-complete-btn').style.display = '';
     }
 
     function completeRuletaTask() {
@@ -3231,8 +3421,7 @@
       const title = ruletaSelectedTask.fields.Title || 'Tarea';
       ruletaSelectedTask = null;
       document.getElementById('ruleta-complete-btn').style.display = 'none';
-      document.getElementById('ruleta-display').innerHTML =
-        '<div class="ruleta-empty">Pulsa girar para elegir una tarea al azar</div>';
+      document.getElementById('ruleta-result').classList.remove('visible');
 
       showToast(`"${title}" completada`, {
         commit: async () => {
@@ -3428,6 +3617,7 @@
       // Pomodoro
       document.getElementById('pomo-container').classList.toggle('visible', nav === 'pomodoro');
       document.getElementById('ruleta-container').classList.toggle('visible', nav === 'ruleta');
+      if (nav === 'ruleta') drawWheel();
 
       // Close review if open
       if (reviewState.active) {
