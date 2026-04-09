@@ -1100,13 +1100,89 @@
       display: flex;
     }
 
+    .ruleta-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 16px;
+    }
+
     .ruleta-header {
       font-family: var(--mono);
       font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 2px;
       color: var(--text-secondary);
+    }
+
+    .ruleta-tasklist {
+      display: none;
+      width: 100%;
+      max-width: 360px;
       margin-bottom: 16px;
+      border: 1px solid var(--border-light);
+      background: var(--surface);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .ruleta-tasklist.visible {
+      display: block;
+    }
+
+    .ruleta-task-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-light);
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .ruleta-task-toggle:last-child {
+      border-bottom: none;
+    }
+
+    .ruleta-task-toggle.excluded {
+      opacity: 0.35;
+    }
+
+    .ruleta-task-toggle .toggle-indicator {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--black);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .ruleta-task-toggle:not(.excluded) .toggle-indicator {
+      background: var(--accent);
+    }
+
+    .ruleta-task-toggle .toggle-name {
+      font-size: 12px;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ruleta-task-toggle .toggle-meta {
+      font-family: var(--mono);
+      font-size: 8px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
     }
 
     .ruleta-wheel-wrap {
@@ -1700,7 +1776,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.11</span>
+      <span class="header-date">v1.12</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -1839,7 +1915,15 @@
   <!-- POMODORO Section -->
   <!-- Ruleta -->
   <div class="ruleta-container" id="ruleta-container">
-    <div class="ruleta-header">Proxima accion // Aleatoria</div>
+    <div class="ruleta-toolbar">
+      <div class="ruleta-header">Proxima accion // Aleatoria</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="filter-btn sort-btn" id="sort-btn-ruleta" onclick="toggleSort()" title="Ordenar por deadline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M6 3l6 9-6 9"/><path d="M18 3l-6 9 6 9"/></svg></button>
+        <button class="filter-btn" id="filter-btn-ruleta" onclick="openFilterModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/></svg></button>
+        <button class="filter-btn" id="ruleta-list-toggle" onclick="toggleRuletaList()" title="Editar tareas"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+      </div>
+    </div>
+    <div class="ruleta-tasklist" id="ruleta-tasklist"></div>
     <div class="ruleta-wheel-wrap" id="ruleta-wheel-wrap">
       <div class="ruleta-pointer"></div>
       <canvas class="ruleta-canvas" id="ruleta-canvas" width="600" height="600"></canvas>
@@ -2245,6 +2329,12 @@
       if (currentProjectViewId) {
         const record = projectsList.find(r => r.id === currentProjectViewId);
         if (record) renderProjectTasks(record.fields.Name || '');
+      }
+
+      // Re-render ruleta if visible
+      if (document.getElementById('ruleta-container').classList.contains('visible')) {
+        if (!ruletaSpinning) drawWheel();
+        if (document.getElementById('ruleta-tasklist').classList.contains('visible')) renderRuletaList();
       }
     }
 
@@ -3274,17 +3364,24 @@
     let ruletaSelectedTask = null;
     let ruletaAngle = 0;
     let ruletaSpinning = false;
+    let ruletaExcluded = new Set(); // manually excluded task IDs
     const WHEEL_COLORS = ['#00f0d0', '#0a0a0a', '#4a90d9', '#0a0a0a', '#6c5ce7', '#0a0a0a', '#e84393', '#0a0a0a', '#f39c12', '#0a0a0a', '#27ae60', '#0a0a0a', '#e74c3c', '#0a0a0a', '#95a5a6', '#0a0a0a'];
+
+    function getRuletaTasks() {
+      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
+      const filtered = filterTasks(nextTasks);
+      return filtered.filter(t => !ruletaExcluded.has(t.id));
+    }
 
     function drawWheel() {
       const canvas = document.getElementById('ruleta-canvas');
       const ctx = canvas.getContext('2d');
-      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
+      const tasks = getRuletaTasks();
       const cx = 300, cy = 300, r = 290;
 
       ctx.clearRect(0, 0, 600, 600);
 
-      if (nextTasks.length === 0) {
+      if (tasks.length === 0) {
         ctx.fillStyle = '#e8e8e3';
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -3297,13 +3394,12 @@
         return;
       }
 
-      const sliceAngle = (Math.PI * 2) / nextTasks.length;
+      const sliceAngle = (Math.PI * 2) / tasks.length;
 
-      nextTasks.forEach((task, i) => {
+      tasks.forEach((task, i) => {
         const startAngle = ruletaAngle + i * sliceAngle;
         const endAngle = startAngle + sliceAngle;
 
-        // Draw slice
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, r, startAngle, endAngle);
@@ -3315,14 +3411,13 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Draw text
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(startAngle + sliceAngle / 2);
         const isDark = ctx.fillStyle === '#0a0a0a';
         ctx.fillStyle = isDark ? '#f0f0ec' : '#0a0a0a';
-        const maxLen = nextTasks.length <= 6 ? 18 : nextTasks.length <= 12 ? 12 : 8;
-        const fontSize = nextTasks.length <= 6 ? 18 : nextTasks.length <= 12 ? 14 : 11;
+        const maxLen = tasks.length <= 6 ? 18 : tasks.length <= 12 ? 12 : 8;
+        const fontSize = tasks.length <= 6 ? 18 : tasks.length <= 12 ? 14 : 11;
         ctx.font = `700 ${fontSize}px "Inter", sans-serif`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
@@ -3332,7 +3427,6 @@
         ctx.restore();
       });
 
-      // Inner ring
       ctx.beginPath();
       ctx.arc(cx, cy, 40, 0, Math.PI * 2);
       ctx.fillStyle = '#f0f0ec';
@@ -3342,10 +3436,51 @@
       ctx.stroke();
     }
 
+    function toggleRuletaList() {
+      const list = document.getElementById('ruleta-tasklist');
+      list.classList.toggle('visible');
+      document.getElementById('ruleta-list-toggle').classList.toggle('active', list.classList.contains('visible'));
+      if (list.classList.contains('visible')) renderRuletaList();
+    }
+
+    function renderRuletaList() {
+      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
+      const filtered = filterTasks(nextTasks);
+      const container = document.getElementById('ruleta-tasklist');
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div style="padding:12px;text-align:center;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary)">Sin tareas disponibles</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(t => {
+        const f = t.fields;
+        const excluded = ruletaExcluded.has(t.id);
+        let metaText = '';
+        if (f.Context) metaText = f.Context;
+        if (f.Project) metaText += (metaText ? ' · ' : '') + f.Project;
+        return `<div class="ruleta-task-toggle ${excluded ? 'excluded' : ''}" onclick="toggleRuletaTask('${t.id}')">
+          <div class="toggle-indicator">${excluded ? '' : '✓'}</div>
+          <span class="toggle-name">${escHtml(f.Title || '')}</span>
+          ${metaText ? `<span class="toggle-meta">${escHtml(metaText)}</span>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function toggleRuletaTask(taskId) {
+      if (ruletaExcluded.has(taskId)) {
+        ruletaExcluded.delete(taskId);
+      } else {
+        ruletaExcluded.add(taskId);
+      }
+      renderRuletaList();
+      if (!ruletaSpinning) drawWheel();
+    }
+
     function spinRuleta() {
       if (ruletaSpinning) return;
-      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
-      if (nextTasks.length === 0) {
+      const tasks = getRuletaTasks();
+      if (tasks.length === 0) {
         drawWheel();
         return;
       }
@@ -3356,18 +3491,12 @@
       document.getElementById('ruleta-complete-btn').style.display = 'none';
       ruletaSelectedTask = null;
 
-      // Pick winner first, then calculate target angle
-      const winnerIndex = Math.floor(Math.random() * nextTasks.length);
-      const sliceAngle = (Math.PI * 2) / nextTasks.length;
-      // Pointer is at top (-PI/2 in canvas coords).
-      // Final ruletaAngle must satisfy: finalAngle + winnerIndex * sliceAngle + sliceAngle/2 = -PI/2 (mod 2PI)
-      // So: finalAngle = -PI/2 - winnerIndex * sliceAngle - sliceAngle/2
+      const winnerIndex = Math.floor(Math.random() * tasks.length);
+      const sliceAngle = (Math.PI * 2) / tasks.length;
       const targetBase = -Math.PI / 2 - winnerIndex * sliceAngle - sliceAngle / 2;
       const startAngle = ruletaAngle;
-      // Add enough full spins to go forward from current position
       let finalAngle = targetBase;
       while (finalAngle <= startAngle + Math.PI * 4) finalAngle += Math.PI * 2;
-      // Add 3-6 extra spins for drama
       finalAngle += (3 + Math.floor(Math.random() * 4)) * Math.PI * 2;
       const totalRotation = finalAngle - startAngle;
 
@@ -3377,7 +3506,6 @@
       function animate() {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        // Ease out cubic
         const ease = 1 - Math.pow(1 - progress, 3);
         ruletaAngle = startAngle + totalRotation * ease;
         drawWheel();
@@ -3385,10 +3513,9 @@
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          // Done
           ruletaSpinning = false;
           document.getElementById('ruleta-center-btn').classList.remove('spinning');
-          ruletaSelectedTask = nextTasks[winnerIndex];
+          ruletaSelectedTask = tasks[winnerIndex];
           showRuletaResult(ruletaSelectedTask);
         }
       }
@@ -3619,7 +3746,10 @@
       // Pomodoro
       document.getElementById('pomo-container').classList.toggle('visible', nav === 'pomodoro');
       document.getElementById('ruleta-container').classList.toggle('visible', nav === 'ruleta');
-      if (nav === 'ruleta') drawWheel();
+      if (nav === 'ruleta') {
+        drawWheel();
+        if (document.getElementById('ruleta-tasklist').classList.contains('visible')) renderRuletaList();
+      }
 
       // Close review if open
       if (reviewState.active) {
