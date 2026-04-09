@@ -1064,6 +1064,221 @@
       letter-spacing: 1px;
     }
 
+    /* === RULETA === */
+    .ruleta-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+      min-height: calc(100vh - 140px);
+    }
+
+    .ruleta-container.visible {
+      display: flex;
+    }
+
+    .ruleta-header {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .ruleta-display {
+      width: 100%;
+      max-width: 360px;
+      min-height: 180px;
+      border: 2px solid var(--black);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ruleta-task-name {
+      font-size: 22px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .ruleta-task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .ruleta-empty {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .ruleta-spin-btn {
+      width: 80px;
+      height: 80px;
+      border: 2px solid var(--black);
+      background: var(--accent);
+      color: var(--black);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .ruleta-spin-btn:active {
+      transform: scale(0.95);
+    }
+
+    .ruleta-spin-btn.spinning {
+      pointer-events: none;
+      animation: ruleta-pulse 0.15s ease-in-out infinite alternate;
+    }
+
+    @keyframes ruleta-pulse {
+      from { transform: scale(1); }
+      to { transform: scale(0.95); }
+    }
+
+    .ruleta-shuffle {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .ruleta-shuffle .ruleta-task-name {
+      animation: ruleta-flip 0.1s steps(1) infinite;
+    }
+
+    @keyframes ruleta-flip {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .ruleta-complete-btn {
+      margin-top: 16px;
+      background: none;
+      border: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+
+    .ruleta-complete-btn:active {
+      background: var(--accent);
+      color: var(--black);
+      border-color: var(--black);
+    }
+
+    /* === PROJECT DETAIL VIEW === */
+    .project-detail-view {
+      display: none;
+    }
+
+    .project-detail-view.visible {
+      display: block;
+    }
+
+    .project-detail-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 12px 0;
+    }
+
+    .project-detail-back:active {
+      color: var(--text);
+    }
+
+    .project-detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0 12px;
+    }
+
+    .project-detail-title {
+      font-size: 20px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
+
+    .project-detail-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .project-detail-cfg {
+      background: none;
+      border: 1px solid var(--border-light);
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
+    .project-detail-cfg:active {
+      border-color: var(--black);
+      color: var(--text);
+    }
+
+    .project-detail-config {
+      display: none;
+      padding: 12px;
+      border: 1px solid var(--border-light);
+      background: var(--surface);
+      margin-bottom: 12px;
+    }
+
+    .project-detail-config.visible {
+      display: block;
+    }
+
+    .project-detail-tasklist .task-item {
+      border-left: none;
+      border-right: none;
+    }
+
     /* === POMODORO === */
     .pomo-container {
       display: none;
@@ -1458,7 +1673,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.9</span>
+      <span class="header-date">v1.11</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()">[CFG]</button>
     </div>
@@ -1517,12 +1732,44 @@
 
   <!-- PROJECTS Section -->
   <div class="task-section" id="section-projects" style="display:none;">
-    <div class="section-header">
-      <h2>Proyectos activos</h2>
-      <span class="section-count" id="count-projects"></span>
+    <div id="projects-list-view">
+      <div class="section-header">
+        <h2>Proyectos activos</h2>
+        <span class="section-count" id="count-projects"></span>
+      </div>
+      <div class="task-list" id="list-projects">
+        <div class="loading">Cargando...</div>
+      </div>
     </div>
-    <div class="task-list" id="list-projects">
-      <div class="loading">Cargando...</div>
+    <div class="project-detail-view" id="project-detail-view">
+      <button class="project-detail-back" onclick="closeProjectView()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Proyectos
+      </button>
+      <div class="project-color-bar" id="pv-color-bar" style="height:4px;width:100%;"></div>
+      <div class="project-detail-header">
+        <span class="project-detail-title" id="pv-title"></span>
+        <div class="project-detail-actions">
+          <button class="project-detail-cfg" onclick="toggleProjectConfig()">[CFG]</button>
+        </div>
+      </div>
+      <div class="project-detail-config" id="pv-config">
+        <div class="field-label">Nombre</div>
+        <input type="text" id="pv-name-input">
+        <div class="field-label">Color</div>
+        <div class="color-palette" id="pv-color-palette"></div>
+        <div class="field-label">Estado</div>
+        <select id="pv-status">
+          <option value="Active">Activo</option>
+          <option value="Some day">Algun dia</option>
+          <option value="Done">Completado</option>
+        </select>
+        <div class="btn-row">
+          <button class="btn-danger" onclick="deleteProjectFromView()">Eliminar</button>
+          <button class="btn-add" id="btn-pv-save" onclick="saveProjectFromView()">Guardar</button>
+        </div>
+      </div>
+      <div class="project-detail-tasklist" id="pv-tasklist"></div>
     </div>
   </div>
 
@@ -1557,6 +1804,16 @@
   </div>
 
   <!-- POMODORO Section -->
+  <!-- Ruleta -->
+  <div class="ruleta-container" id="ruleta-container">
+    <div class="ruleta-header">Proxima accion // Aleatoria</div>
+    <div class="ruleta-display" id="ruleta-display">
+      <div class="ruleta-empty">Pulsa girar para elegir una tarea al azar</div>
+    </div>
+    <button class="ruleta-spin-btn" id="ruleta-spin-btn" onclick="spinRuleta()">Girar</button>
+    <button class="ruleta-complete-btn" id="ruleta-complete-btn" style="display:none" onclick="completeRuletaTask()">Completar tarea</button>
+  </div>
+
   <div class="pomo-container" id="pomo-container">
     <div class="pomo-phase-bar" id="pomo-phases">
       <button class="active" data-phase="0" onclick="jumpToPhase(0)">1</button>
@@ -1637,6 +1894,10 @@
     <button class="nav-item" data-nav="pomodoro" onclick="switchNav('pomodoro')">
       <span class="nav-icon">[:::]</span>
       <span class="nav-label">Pomodoro</span>
+    </button>
+    <button class="nav-item" data-nav="ruleta" onclick="switchNav('ruleta')">
+      <span class="nav-icon">[><]</span>
+      <span class="nav-label">Ruleta</span>
     </button>
     <button class="nav-item disabled" data-nav="calendar">
       <span class="nav-icon">[//]</span>
@@ -1797,27 +2058,6 @@
     </div>
   </div>
 
-  <!-- Project Detail Modal -->
-  <div class="modal-overlay" id="modal-project" onclick="closeModal('modal-project', event)">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-label">Proyecto // Detalle</div>
-      <h3 id="project-detail-name"></h3>
-      <div class="field-label">Nombre</div>
-      <input type="text" id="project-detail-name-input">
-      <div class="field-label">Color</div>
-      <div class="color-palette" id="project-color-palette"></div>
-      <div class="field-label">Estado</div>
-      <select id="project-detail-status">
-        <option value="Active">Activo</option>
-        <option value="Some day">Algún día</option>
-        <option value="Done">Completado</option>
-      </select>
-      <div class="btn-row">
-        <button class="btn-danger" onclick="deleteProject()">Eliminar</button>
-        <button class="btn-add" id="btn-project-save" onclick="saveProjectDetail()">Guardar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- New Project Modal -->
   <div class="modal-overlay" id="modal-new-project" onclick="closeModal('modal-new-project', event)">
@@ -2305,24 +2545,9 @@
       const f = record.fields;
       const name = f.Name || '';
       const tasks = allTasks.filter(t => t.fields.Project === name);
-      const statusLabel = { 'Next action': '>>', 'Waiting': '..', 'Some day': '~' };
-
-      let tasksHtml = '';
-      if (tasks.length === 0) {
-        tasksHtml = '<div class="project-empty">Sin tareas asignadas</div>';
-      } else {
-        tasksHtml = tasks.map(t => {
-          const tf = t.fields;
-          return `<div class="project-task" onclick="event.stopPropagation(); openTaskDetail('${t.id}')">
-            <span class="project-task-title">${escHtml(tf.Title || '')}</span>
-            <span class="project-task-status">${escHtml(statusLabel[tf.Status] || tf.Status || '')}</span>
-          </div>`;
-        }).join('');
-      }
-
       const color = f.Color || '#00f0d0';
       return `
-        <div class="project-item" data-id="${record.id}" data-table="projects" onclick="openProjectDetail('${record.id}')">
+        <div class="project-item" data-id="${record.id}" data-table="projects" onclick="openProjectView('${record.id}')">
           <div class="project-color-bar" style="background:${color}"></div>
           <div class="project-header">
             <div>
@@ -2330,7 +2555,6 @@
             </div>
             <div class="project-count">${String(tasks.length).padStart(2, '0')}</div>
           </div>
-          <div class="project-tasks">${tasksHtml}</div>
         </div>`;
     }
 
@@ -2390,6 +2614,14 @@
       renderList('someday', sortTasks(filterTasks(somedayTasks)), renderTaskItem);
       // Projects
       renderList('projects', activeProjects, renderProjectItem);
+      // Refresh project detail view if open
+      if (currentProjectViewId) {
+        const record = projectsList.find(r => r.id === currentProjectViewId);
+        if (record) {
+          document.getElementById('pv-title').textContent = record.fields.Name || '';
+          renderProjectTasks(record.fields.Name || '');
+        }
+      }
       // Update filter state
       updateFilterButtons();
       // Refresh review step if active
@@ -2646,15 +2878,15 @@
     }
 
     // Color palette
-    function renderColorPalette(selected) {
-      const pal = document.getElementById('project-color-palette');
+    function renderColorPalette(selected, targetId) {
+      const pal = document.getElementById(targetId || 'project-color-palette');
       pal.innerHTML = PROJECT_COLORS.map(c =>
         `<div class="color-swatch${c.hex === selected ? ' selected' : ''}" data-color="${c.hex}" style="background:${c.hex}" onclick="selectColor(this)"></div>`
       ).join('');
     }
 
     function selectColor(el) {
-      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      el.closest('.color-palette').querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
       el.classList.add('selected');
     }
 
@@ -2663,45 +2895,131 @@
       return p?.fields.Color || null;
     }
 
-    // Project detail
-    function openProjectDetail(recordId) {
+    // Project view (inline detail)
+    let currentProjectViewId = null;
+
+    function openProjectView(recordId) {
       const record = projectsList.find(r => r.id === recordId);
       if (!record) return;
-      currentProjectId = recordId;
+      currentProjectViewId = recordId;
       const f = record.fields;
-      document.getElementById('project-detail-name').textContent = f.Name || '';
-      document.getElementById('project-detail-name-input').value = f.Name || '';
-      document.getElementById('project-detail-status').value = f.Status || 'Active';
-      renderColorPalette(f.Color || PROJECT_COLORS[0].hex);
-      document.getElementById('modal-project').classList.add('open');
+      const color = f.Color || '#00f0d0';
+
+      document.getElementById('projects-list-view').style.display = 'none';
+      const detailView = document.getElementById('project-detail-view');
+      detailView.classList.add('visible');
+
+      document.getElementById('pv-title').textContent = f.Name || '';
+      document.getElementById('pv-color-bar').style.background = color;
+      document.getElementById('pv-name-input').value = f.Name || '';
+      document.getElementById('pv-status').value = f.Status || 'Active';
+      renderColorPalette(color, 'pv-color-palette');
+
+      // Hide config by default
+      document.getElementById('pv-config').classList.remove('visible');
+
+      // Render tasks for this project
+      renderProjectTasks(f.Name || '');
     }
 
-    async function saveProjectDetail() {
-      if (!currentProjectId) return;
-      const btn = document.getElementById('btn-project-save');
-      btn.disabled = true;
-      btn.textContent = '...';
+    function renderProjectTasks(projectName) {
+      const tasks = allTasks.filter(t => t.fields.Project === projectName);
+      const container = document.getElementById('pv-tasklist');
 
-      const selectedSwatch = document.querySelector('.color-swatch.selected');
-      const fields = {
-        Name: document.getElementById('project-detail-name-input').value.trim(),
-        Status: document.getElementById('project-detail-status').value,
-        Color: selectedSwatch ? selectedSwatch.dataset.color : null
-      };
-      await updateRecord(CONFIG.tables.projects, currentProjectId, fields);
+      if (tasks.length === 0) {
+        container.innerHTML = '<div class="project-empty" style="padding:16px 0">Sin tareas asignadas</div>';
+        return;
+      }
 
-      btn.disabled = false;
-      btn.textContent = 'Guardar';
-      currentProjectId = null;
-      closeModal('modal-project');
+      container.innerHTML = tasks.map((t, i) => {
+        const f = t.fields;
+        const isWaiting = f.Status === 'Waiting';
+        const checkAction = isWaiting
+          ? `event.stopPropagation(); resolveWaiting('${t.id}')`
+          : `event.stopPropagation(); completeTaskFromProject('${t.id}', this)`;
+        let meta = '';
+        if (f.Context) meta += `<span class="tag tag-context">${escHtml(f.Context)}</span>`;
+        const statusLabel = { 'Next action': 'Proxima', 'Waiting': 'Esperando', 'Some day': 'Algun dia' };
+        meta += `<span class="tag">${escHtml(statusLabel[f.Status] || f.Status || '')}</span>`;
+        const dl = formatDeadline(f.Deadline);
+        if (dl) meta += `<span class="tag-deadline ${dl.cls}">${dl.text}</span>`;
+        return `
+          <div class="task-item" data-id="${t.id}" onclick="openTaskDetail('${t.id}')">
+            <div class="task-number">${String(i + 1).padStart(2, '0')}</div>
+            <div class="task-status">
+              <div class="task-checkbox" onclick="${checkAction}"></div>
+            </div>
+            <div class="task-content">
+              <div class="task-title">${escHtml(f.Title || '')}</div>
+              ${meta ? `<div class="task-meta">${meta}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function completeTaskFromProject(recordId, el) {
+      el.classList.add('checked');
+      const item = el.closest('.task-item');
+      item.classList.add('completed');
+      item.style.pointerEvents = 'none';
+      const title = item.querySelector('.task-title')?.textContent || 'Tarea';
+
+      showToast(`"${title}" completada`, {
+        commit: async () => {
+          if (!isOnline) {
+            enqueueOffline({ method: 'PATCH', tableId: CONFIG.tables.tasks, recordId, fields: { Status: 'Done' } });
+            return;
+          }
+          await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
+        },
+        undo: () => {
+          el.classList.remove('checked');
+          item.classList.remove('completed');
+          item.style.pointerEvents = '';
+        }
+      });
+      // Reload to update counts
       loadAll();
     }
 
-    async function deleteProject() {
-      if (!currentProjectId) return;
-      const id = currentProjectId;
-      currentProjectId = null;
-      closeModal('modal-project');
+    function closeProjectView() {
+      currentProjectViewId = null;
+      document.getElementById('project-detail-view').classList.remove('visible');
+      document.getElementById('projects-list-view').style.display = '';
+    }
+
+    function toggleProjectConfig() {
+      document.getElementById('pv-config').classList.toggle('visible');
+    }
+
+    async function saveProjectFromView() {
+      if (!currentProjectViewId) return;
+      const btn = document.getElementById('btn-pv-save');
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      const selectedSwatch = document.querySelector('#pv-color-palette .color-swatch.selected');
+      const fields = {
+        Name: document.getElementById('pv-name-input').value.trim(),
+        Status: document.getElementById('pv-status').value,
+        Color: selectedSwatch ? selectedSwatch.dataset.color : null
+      };
+      await updateRecord(CONFIG.tables.projects, currentProjectViewId, fields);
+
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+
+      // If status changed to Done or Some day, go back to list
+      if (fields.Status !== 'Active') {
+        closeProjectView();
+      }
+      loadAll();
+    }
+
+    async function deleteProjectFromView() {
+      if (!currentProjectViewId) return;
+      const id = currentProjectViewId;
+      closeProjectView();
 
       showToast('Proyecto eliminado', {
         commit: async () => {
@@ -2849,6 +3167,85 @@
     document.getElementById('input-title').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') addTask();
     });
+
+    // === RULETA ===
+    let ruletaSelectedTask = null;
+
+    function spinRuleta() {
+      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
+      if (nextTasks.length === 0) {
+        document.getElementById('ruleta-display').innerHTML =
+          '<div class="ruleta-empty">No hay proximas acciones disponibles</div>';
+        return;
+      }
+
+      const btn = document.getElementById('ruleta-spin-btn');
+      const display = document.getElementById('ruleta-display');
+      btn.classList.add('spinning');
+      document.getElementById('ruleta-complete-btn').style.display = 'none';
+      ruletaSelectedTask = null;
+
+      let shuffleCount = 0;
+      const totalShuffles = 15 + Math.floor(Math.random() * 10);
+      const baseInterval = 60;
+
+      function shuffle() {
+        const randomTask = nextTasks[Math.floor(Math.random() * nextTasks.length)];
+        display.innerHTML = `<div><div class="ruleta-task-name">${escHtml(randomTask.fields.Title || '')}</div></div>`;
+        shuffleCount++;
+
+        if (shuffleCount < totalShuffles) {
+          const delay = baseInterval + (shuffleCount * shuffleCount * 2);
+          setTimeout(shuffle, delay);
+        } else {
+          // Final selection
+          const selected = nextTasks[Math.floor(Math.random() * nextTasks.length)];
+          ruletaSelectedTask = selected;
+          const f = selected.fields;
+          let meta = '';
+          if (f.Project) {
+            const pColor = getProjectColor(f.Project);
+            const pStyle = pColor ? `background:${pColor};border-color:${pColor};color:#0a0a0a` : '';
+            meta += `<span class="tag tag-project" style="${pStyle}">${escHtml(f.Project)}</span>`;
+          }
+          if (f.Context) meta += `<span class="tag tag-context">${escHtml(f.Context)}</span>`;
+          const dl = formatDeadline(f.Deadline);
+          if (dl) meta += `<span class="tag-deadline ${dl.cls}">${dl.text}</span>`;
+          display.innerHTML = `<div>
+            <div class="ruleta-task-name">${escHtml(f.Title || '')}</div>
+            ${meta ? `<div class="ruleta-task-meta">${meta}</div>` : ''}
+          </div>`;
+          display.style.borderColor = 'var(--accent)';
+          setTimeout(() => { display.style.borderColor = 'var(--black)'; }, 1500);
+          btn.classList.remove('spinning');
+          document.getElementById('ruleta-complete-btn').style.display = '';
+        }
+      }
+
+      shuffle();
+    }
+
+    function completeRuletaTask() {
+      if (!ruletaSelectedTask) return;
+      const id = ruletaSelectedTask.id;
+      const title = ruletaSelectedTask.fields.Title || 'Tarea';
+      ruletaSelectedTask = null;
+      document.getElementById('ruleta-complete-btn').style.display = 'none';
+      document.getElementById('ruleta-display').innerHTML =
+        '<div class="ruleta-empty">Pulsa girar para elegir una tarea al azar</div>';
+
+      showToast(`"${title}" completada`, {
+        commit: async () => {
+          if (!isOnline) {
+            enqueueOffline({ method: 'PATCH', tableId: CONFIG.tables.tasks, recordId: id, fields: { Status: 'Done' } });
+            return;
+          }
+          await updateRecord(CONFIG.tables.tasks, id, { Status: 'Done' });
+        },
+        undo: () => {}
+      });
+      loadAll();
+    }
 
     // === DRAG & DROP ===
     let dragState = null;
@@ -3030,6 +3427,7 @@
 
       // Pomodoro
       document.getElementById('pomo-container').classList.toggle('visible', nav === 'pomodoro');
+      document.getElementById('ruleta-container').classList.toggle('visible', nav === 'ruleta');
 
       // Close review if open
       if (reviewState.active) {
