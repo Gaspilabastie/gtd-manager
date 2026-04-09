@@ -1061,16 +1061,15 @@
       transition: all 0.15s;
     }
 
-    .filter-option.include {
+    .filter-option.available {
       background: var(--black);
       color: var(--accent);
       border-color: var(--black);
     }
 
-    .filter-option.exclude {
-      background: var(--danger);
-      color: #fff;
-      border-color: var(--danger);
+    .filter-option.unavailable {
+      opacity: 0.4;
+      text-decoration: line-through;
     }
 
     .filter-option-name {
@@ -1776,7 +1775,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.12.2</span>
+      <span class="header-date">v1.13</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -2139,9 +2138,9 @@
   <!-- Filter Modal -->
   <div class="modal-overlay" id="modal-filter" onclick="closeModal('modal-filter', event)">
     <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-label">Filtro // Contextos</div>
-      <h3>Filtrar por contexto</h3>
-      <div class="filter-summary">Toca una vez para ver solo ese contexto. Toca de nuevo para ocultarlo. Una tercera vez limpia.</div>
+      <div class="modal-label">Filtro // Disponibilidad</div>
+      <h3>Que tengo disponible?</h3>
+      <div class="filter-summary">Marca lo que tenes disponible ahora. Las tareas sin contexto siempre se muestran.</div>
       <div id="filter-options" style="margin-top:12px;"></div>
       <div class="modal-actions" style="margin-top:16px;">
         <button class="btn-cancel" onclick="clearFilter(); closeModal('modal-filter')">Limpiar</button>
@@ -2237,7 +2236,8 @@
 
     // === FILTER ===
     // Each context can be: null (no filter), 'include', or 'exclude'
-    let contextFilters = {}; // { '@compu': 'include', '@calle': 'exclude', ... }
+    // contextFilters: Set of UNavailable contexts. If empty, no filter active (all available).
+    let unavailableContexts = new Set();
 
     function openFilterModal() {
       renderFilterOptions();
@@ -2248,21 +2248,22 @@
       const container = document.getElementById('filter-options');
       const contexts = getContexts();
       container.innerHTML = contexts.map(c => {
-        const state = contextFilters[c] || null;
-        const cls = state === 'include' ? 'include' : state === 'exclude' ? 'exclude' : '';
-        const label = state === 'include' ? 'Solo ver' : state === 'exclude' ? 'Ocultar' : '—';
-        return `<div class="filter-option ${cls}" onclick="cycleFilter('${escHtml(c)}')">
+        const available = !unavailableContexts.has(c);
+        const cls = available ? 'available' : 'unavailable';
+        const label = available ? 'Disponible' : 'No disponible';
+        return `<div class="filter-option ${cls}" onclick="toggleAvailability('${escHtml(c)}')">
           <span class="filter-option-name">${escHtml(c)}</span>
           <span class="filter-option-state">${label}</span>
         </div>`;
       }).join('');
     }
 
-    function cycleFilter(ctx) {
-      const current = contextFilters[ctx] || null;
-      if (current === null) contextFilters[ctx] = 'include';
-      else if (current === 'include') contextFilters[ctx] = 'exclude';
-      else delete contextFilters[ctx];
+    function toggleAvailability(ctx) {
+      if (unavailableContexts.has(ctx)) {
+        unavailableContexts.delete(ctx);
+      } else {
+        unavailableContexts.add(ctx);
+      }
       ruletaExcluded.clear();
       renderFilterOptions();
       applyFilter();
@@ -2270,14 +2271,14 @@
     }
 
     function clearFilter() {
-      contextFilters = {};
+      unavailableContexts.clear();
       ruletaExcluded.clear();
       applyFilter();
       updateFilterButtons();
     }
 
     function hasActiveFilter() {
-      return Object.keys(contextFilters).length > 0;
+      return unavailableContexts.size > 0;
     }
 
     function updateFilterButtons() {
@@ -2379,13 +2380,12 @@
 
     function filterTasks(tasks) {
       if (!hasActiveFilter()) return tasks;
-      const includes = Object.entries(contextFilters).filter(([,v]) => v === 'include').map(([k]) => k);
-      const excludes = Object.entries(contextFilters).filter(([,v]) => v === 'exclude').map(([k]) => k);
       return tasks.filter(t => {
         const ctx = t.fields.Context || '';
-        if (excludes.includes(ctx)) return false;
-        if (includes.length > 0) return includes.includes(ctx);
-        return true;
+        // Tasks without context always pass
+        if (!ctx) return true;
+        // Tasks with an unavailable context are filtered out
+        return !unavailableContexts.has(ctx);
       });
     }
 
