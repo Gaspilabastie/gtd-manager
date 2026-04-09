@@ -1252,32 +1252,28 @@
       pointer-events: none;
     }
 
-    .ruleta-bottom {
-      width: 100%;
-      max-width: 380px;
-      flex-shrink: 0;
-      height: 120px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
     .ruleta-result {
       width: 100%;
+      max-width: 380px;
       height: 52px;
       border: 1px solid var(--border-light);
       background: var(--surface);
       padding: 8px 12px;
-      text-align: center;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
       overflow: hidden;
     }
 
     .ruleta-result.active {
       border-color: var(--accent);
+    }
+
+    .ruleta-result-content {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
     }
 
     .ruleta-result-name {
@@ -1328,16 +1324,13 @@
     }
 
     .ruleta-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
+      display: none;
+      gap: 4px;
       flex-shrink: 0;
-      margin-top: 8px;
-      visibility: hidden;
     }
 
     .ruleta-actions.visible {
-      visibility: visible;
+      display: flex;
     }
 
     .ruleta-pomo-btn {
@@ -1821,7 +1814,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.16.6</span>
+      <span class="header-date">v1.16.7</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -1976,13 +1969,13 @@
       <canvas class="ruleta-canvas" id="ruleta-canvas" width="600" height="600"></canvas>
       <button class="ruleta-center-btn" id="ruleta-center-btn" onclick="spinRuleta()">Girar</button>
     </div>
-    <div class="ruleta-bottom" id="ruleta-bottom">
-      <div class="ruleta-result" id="ruleta-result">
+    <div class="ruleta-result" id="ruleta-result">
+      <div class="ruleta-result-content">
         <div class="ruleta-empty">Gira la rueda</div>
       </div>
       <div class="ruleta-actions" id="ruleta-actions">
-        <button class="ruleta-complete-btn" onclick="completeRuletaTask()">Completar</button>
-        <button class="ruleta-complete-btn ruleta-pomo-btn" onclick="startPomoFromRuleta()">Pomodoro</button>
+        <button class="ruleta-complete-btn" onclick="completeRuletaTask()">OK</button>
+        <button class="ruleta-complete-btn ruleta-pomo-btn" onclick="startPomoFromRuleta()">Pomo</button>
       </div>
     </div>
   </div>
@@ -3633,7 +3626,7 @@
       ruletaSpinning = true;
       document.getElementById('ruleta-center-btn').classList.add('spinning');
       document.getElementById('ruleta-result').classList.remove('active');
-      document.getElementById('ruleta-result').innerHTML = '<div class="ruleta-empty">Girando...</div>';
+      document.querySelector('.ruleta-result-content').innerHTML = '<div class="ruleta-empty">Girando...</div>';
       document.getElementById('ruleta-actions').classList.remove('visible');
       ruletaSelectedTask = null;
 
@@ -3693,12 +3686,11 @@
       const dl = formatDeadline(f.Deadline);
       if (dl) meta += `<span class="tag-deadline ${dl.cls}">${dl.text}</span>`;
 
-      const result = document.getElementById('ruleta-result');
-      result.innerHTML = `
+      document.querySelector('.ruleta-result-content').innerHTML = `
         <div class="ruleta-result-name">${escHtml(f.Title || '')}</div>
         ${meta ? `<div class="ruleta-result-meta">${meta}</div>` : ''}
       `;
-      result.classList.add('active');
+      document.getElementById('ruleta-result').classList.add('active');
       document.getElementById('ruleta-actions').classList.add('visible');
     }
 
@@ -3709,7 +3701,7 @@
       ruletaSelectedTask = null;
       document.getElementById('ruleta-actions').classList.remove('visible');
       document.getElementById('ruleta-result').classList.remove('active');
-      document.getElementById('ruleta-result').innerHTML = '<div class="ruleta-empty">Gira la rueda</div>';
+      document.querySelector('.ruleta-result-content').innerHTML = '<div class="ruleta-empty">Gira la rueda</div>';
 
       showToast(`"${title}" completada`, {
         commit: async () => {
@@ -3730,7 +3722,7 @@
       ruletaSelectedTask = null;
       document.getElementById('ruleta-actions').classList.remove('visible');
       document.getElementById('ruleta-result').classList.remove('active');
-      document.getElementById('ruleta-result').innerHTML = '<div class="ruleta-empty">Gira la rueda</div>';
+      document.querySelector('.ruleta-result-content').innerHTML = '<div class="ruleta-empty">Gira la rueda</div>';
 
       // Link task to pomodoro
       pomoState.linkedTask = task.id;
