@@ -2196,7 +2196,7 @@
 
     function updateFilterButtons() {
       const active = hasActiveFilter();
-      document.querySelectorAll('.filter-btn').forEach(btn => {
+      document.querySelectorAll('.filter-btn:not(.sort-btn)').forEach(btn => {
         btn.classList.toggle('active', active);
       });
     }
