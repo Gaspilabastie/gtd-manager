@@ -1031,6 +1031,109 @@
       padding: 2px 0;
     }
 
+    /* === FEEDBACK === */
+    .feedback-list {
+      max-height: 240px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .feedback-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .feedback-item:last-child {
+      border-bottom: none;
+    }
+
+    .feedback-type {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 6px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .feedback-type.bug {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .feedback-type.feature {
+      background: var(--accent);
+      color: var(--black);
+    }
+
+    .feedback-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feedback-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .feedback-status {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .feedback-status.done {
+      color: #27ae60;
+    }
+
+    .feedback-status.in-progress {
+      color: #f39c12;
+    }
+
+    .feedback-empty {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 20px 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .feedback-divider {
+      border: none;
+      border-top: 2px solid var(--black);
+      margin: 16px 0;
+    }
+
+    .modal textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 2px solid var(--black);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      margin-bottom: 10px;
+      outline: none;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal textarea:focus {
+      border-color: var(--black);
+      background: var(--accent);
+    }
+
     /* === FILTER === */
     .filter-btn {
       background: none;
@@ -1814,7 +1917,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.16.7</span>
+      <span class="header-date">v1.17</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -2218,12 +2321,41 @@
         <span class="field-label" style="flex:1;text-align:center;margin:0">Break</span>
         <span class="field-label" style="flex:1;text-align:center;margin:0">Largo</span>
       </div>
-      <div class="modal-actions">
+      <hr class="feedback-divider">
+      <div class="field-label">Feedback</div>
+      <div class="modal-actions" style="margin-top:8px;">
+        <button class="btn-add" style="flex:1;" onclick="closeModal('modal-settings'); openFeedback()">Reportar bug / Pedir feature</button>
+      </div>
+      <div class="modal-actions" style="margin-top:8px;">
         <button class="btn-add" style="flex:1;" onclick="saveSettings()">Listo</button>
       </div>
     </div>
   </div>
 
+  <!-- Feedback Modal -->
+  <div class="modal-overlay" id="modal-feedback" onclick="closeModal('modal-feedback', event)">
+    <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+      <div class="modal-label">Feedback // Reportar</div>
+      <h3>Feedback</h3>
+      <div id="feedback-form">
+        <select id="feedback-type" style="margin-bottom:10px;">
+          <option value="Bug">Bug</option>
+          <option value="Feature">Feature</option>
+        </select>
+        <input type="text" id="feedback-title" placeholder="Titulo">
+        <textarea id="feedback-desc" placeholder="Descripcion (opcional)"></textarea>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeModal('modal-feedback')">Cancelar</button>
+          <button class="btn-add" id="btn-send-feedback" onclick="submitFeedback()">Enviar</button>
+        </div>
+      </div>
+      <hr class="feedback-divider">
+      <div class="field-label">Historial</div>
+      <div class="feedback-list" id="feedback-list">
+        <div class="feedback-empty">Cargando...</div>
+      </div>
+    </div>
+  </div>
 
   <!-- New Project Modal -->
   <div class="modal-overlay" id="modal-new-project" onclick="closeModal('modal-new-project', event)">
@@ -2268,7 +2400,8 @@
       tables: {
         inbox: 'tblXB8wC3LkT2UcpO',
         tasks: 'tbl6fwNx6OPeBSWX4',
-        projects: 'tblKGlGqf22tgHT7x'
+        projects: 'tblKGlGqf22tgHT7x',
+        feedback: 'tbl3ADNbx97Mr5SHM'
       }
     };
 
@@ -4397,6 +4530,83 @@
         </div>
       `;
       document.getElementById('review-nav-actions').style.display = 'none';
+    }
+
+    // === FEEDBACK ===
+    let feedbackItems = [];
+
+    async function openFeedback() {
+      document.getElementById('feedback-title').value = '';
+      document.getElementById('feedback-desc').value = '';
+      document.getElementById('feedback-type').value = 'Bug';
+      document.getElementById('modal-feedback').classList.add('open');
+      setTimeout(() => document.getElementById('feedback-title').focus(), 100);
+      loadFeedback();
+    }
+
+    async function loadFeedback() {
+      const listEl = document.getElementById('feedback-list');
+      listEl.innerHTML = '<div class="feedback-empty">Cargando...</div>';
+      try {
+        feedbackItems = await fetchRecords(CONFIG.tables.feedback);
+        feedbackItems.sort((a, b) => new Date(b.fields.Created || 0) - new Date(a.fields.Created || 0));
+        renderFeedbackList();
+      } catch (e) {
+        listEl.innerHTML = '<div class="feedback-empty">Error al cargar</div>';
+      }
+    }
+
+    function renderFeedbackList() {
+      const listEl = document.getElementById('feedback-list');
+      if (feedbackItems.length === 0) {
+        listEl.innerHTML = '<div class="feedback-empty">Sin feedback reportado</div>';
+        return;
+      }
+      listEl.innerHTML = feedbackItems.map(r => {
+        const f = r.fields;
+        const typeCls = (f.Type || '').toLowerCase();
+        const statusRaw = f.Status || 'New';
+        let statusCls = '';
+        if (statusRaw === 'Done') statusCls = 'done';
+        else if (statusRaw === 'In Progress') statusCls = 'in-progress';
+        return `
+          <div class="feedback-item">
+            <span class="feedback-type ${typeCls}">${escHtml(f.Type || '?')}</span>
+            <div class="feedback-info">
+              <div class="feedback-title">${escHtml(f.Title || 'Sin titulo')}</div>
+              <div class="feedback-status ${statusCls}">${escHtml(statusRaw)}${f.CommitHash ? ' // ' + escHtml(f.CommitHash.slice(0, 7)) : ''}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function submitFeedback() {
+      const title = document.getElementById('feedback-title').value.trim();
+      if (!title) return;
+      const type = document.getElementById('feedback-type').value;
+      const desc = document.getElementById('feedback-desc').value.trim();
+      const btn = document.getElementById('btn-send-feedback');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+      try {
+        const fields = {
+          Title: title,
+          Type: type,
+          Status: 'New',
+          Created: new Date().toISOString()
+        };
+        if (desc) fields.Description = desc;
+        await createRecord(CONFIG.tables.feedback, fields);
+        document.getElementById('feedback-title').value = '';
+        document.getElementById('feedback-desc').value = '';
+        showToast('Feedback enviado');
+        loadFeedback();
+      } catch (e) {
+        showToast('Error al enviar');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enviar';
+      }
     }
 
     // === INIT ===
