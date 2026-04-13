@@ -1901,6 +1901,99 @@
       cursor: pointer;
       border: 2px solid var(--black);
     }
+
+    .detail-title-input {
+      font-size: 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--border-light);
+      padding: 8px 0;
+      width: 100%;
+      font-family: var(--sans);
+      color: var(--text);
+      outline: none;
+    }
+
+    .detail-title-input:focus {
+      border-bottom-color: var(--accent);
+    }
+
+    .tag-recurrence {
+      background: none;
+      color: #6c5ce7;
+      border-color: #6c5ce7;
+    }
+
+    .tag-subtasks {
+      background: none;
+      color: var(--text-secondary);
+      border-color: var(--border-light);
+    }
+
+    .subtask-section {
+      margin-top: 12px;
+      border-top: 1px solid var(--border-light);
+      padding-top: 8px;
+    }
+
+    .subtask-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .subtask-item:last-child {
+      border-bottom: none;
+    }
+
+    .subtask-checkbox {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--black);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .subtask-checkbox.checked {
+      background: var(--black);
+    }
+
+    .subtask-checkbox.checked::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+    }
+
+    .subtask-title {
+      font-size: 13px;
+      flex: 1;
+    }
+
+    .subtask-title.done {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+
+    .subtask-add-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .subtask-add-row input {
+      flex: 1;
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
@@ -1917,7 +2010,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.17</span>
+      <span class="header-date">v1.18</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -2243,7 +2336,7 @@
   <div class="modal-overlay" id="modal-detail" onclick="closeModal('modal-detail', event)">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-label">Tarea // Detalle</div>
-      <h3 id="detail-title-display" style="margin-bottom:12px;"></h3>
+      <input type="text" class="detail-title-input" id="detail-title-input" placeholder="Título de la tarea">
       <div class="field-label">Estado</div>
       <select id="detail-status">
         <option value="Next action">Próxima acción</option>
@@ -2263,6 +2356,17 @@
         <input type="date" id="detail-deadline">
         <button type="button" class="btn-asap" id="detail-asap-btn" onclick="toggleAsap('detail-deadline', this)">ASAP</button>
       </div>
+      <div class="field-label">Descripción</div>
+      <textarea id="detail-description" placeholder="Notas opcionales..." rows="3"></textarea>
+      <div class="field-label">Recurrencia</div>
+      <select id="detail-recurrence">
+        <option value="">Sin recurrencia</option>
+        <option value="Daily">Diaria</option>
+        <option value="Weekly">Semanal</option>
+        <option value="Monthly">Mensual</option>
+        <option value="Yearly">Anual</option>
+      </select>
+      <div class="subtask-section" id="detail-subtasks"></div>
       <div class="btn-row">
         <button class="btn-danger" onclick="deleteTask()">Eliminar</button>
         <button class="btn-add" id="btn-detail-save" onclick="saveTaskDetail()">Guardar</button>
@@ -2890,7 +2994,7 @@
         <div class="task-item inbox-item" data-id="${record.id}" data-table="inbox" onclick="openProcess('${record.id}', '${escAttr(f.Title || '')}')">
           <div class="task-number">${String(index + 1).padStart(2, '0')}</div>
           <div class="task-status">
-            <div class="task-checkbox"></div>
+            <div class="task-checkbox" onclick="event.stopPropagation(); completeInbox('${record.id}', this)"></div>
           </div>
           <div class="task-content">
             <div class="task-title">${escHtml(f.Title || '')}</div>
@@ -2903,6 +3007,11 @@
 
     function escAttr(s) {
       return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function recurrenceLabel(r) {
+      const labels = { Daily: 'REC:DIA', Weekly: 'REC:SEM', Monthly: 'REC:MES', Yearly: 'REC:AÑO' };
+      return labels[r] || '';
     }
 
     function renderTaskItem(record, index) {
@@ -2921,6 +3030,9 @@
       if (isWaiting) meta += `<span class="tag tag-waiting">Esperando</span>`;
       const dl = formatDeadline(f.Deadline);
       if (dl) meta += `<span class="tag-deadline ${dl.cls}">${dl.text}</span>`;
+      if (f.Recurrence) meta += `<span class="tag tag-recurrence">${recurrenceLabel(f.Recurrence)}</span>`;
+      const subtaskCount = allTasks.filter(t => t.fields.ParentTask === record.id).length;
+      if (subtaskCount > 0) meta += `<span class="tag tag-subtasks">${subtaskCount} SUB</span>`;
       return `
         <div class="task-item" data-id="${record.id}" onclick="openTaskDetail('${record.id}')">
           <div class="task-number">${String(index + 1).padStart(2, '0')}</div>
@@ -2937,7 +3049,7 @@
     function renderProjectItem(record) {
       const f = record.fields;
       const name = f.Name || '';
-      const allProjectTasks = allTasks.filter(t => t.fields.Project === name);
+      const allProjectTasks = allTasks.filter(t => t.fields.Project === name && !t.fields.ParentTask);
       const filtered = sortTasks(filterTasks(allProjectTasks));
       const color = f.Color || '#00f0d0';
       let preview = '';
@@ -2991,15 +3103,16 @@
       });
       allTasks = tasks;
       inboxItems = inbox;
+      const topLevelTasks = tasks.filter(t => !t.fields.ParentTask);
       const activeProjects = projects.filter(r => r.fields.Status === 'Active');
       activeProjects.sort((a, b) => {
         const oa = a.fields.Order != null ? a.fields.Order : 9999;
         const ob = b.fields.Order != null ? b.fields.Order : 9999;
         return oa - ob;
       });
-      const nextTasks = tasks.filter(r => r.fields.Status === 'Next action');
-      const waitingTasks = tasks.filter(r => r.fields.Status === 'Waiting');
-      const somedayTasks = tasks.filter(r => r.fields.Status === 'Some day');
+      const nextTasks = topLevelTasks.filter(r => r.fields.Status === 'Next action');
+      const waitingTasks = topLevelTasks.filter(r => r.fields.Status === 'Waiting');
+      const somedayTasks = topLevelTasks.filter(r => r.fields.Status === 'Some day');
 
       // Cache projects for selects
       projectsList = projects;
@@ -3225,10 +3338,12 @@
       if (!record) return;
       currentDetailId = recordId;
       const f = record.fields;
-      document.getElementById('detail-title-display').textContent = f.Title || '';
+      document.getElementById('detail-title-input').value = f.Title || '';
       document.getElementById('detail-status').value = f.Status || 'Next action';
       document.getElementById('detail-context').value = f.Context || '';
       document.getElementById('detail-project').value = f.Project || '';
+      document.getElementById('detail-description').value = f.Description || '';
+      document.getElementById('detail-recurrence').value = f.Recurrence || '';
       const detailAsapBtn = document.getElementById('detail-asap-btn');
       const detailDeadlineInput = document.getElementById('detail-deadline');
       if (isAsap(f.Deadline)) {
@@ -3240,6 +3355,7 @@
         detailDeadlineInput.disabled = false;
         detailAsapBtn.classList.remove('active');
       }
+      renderSubTasks(recordId);
       document.getElementById('modal-detail').classList.add('open');
     }
 
@@ -3250,10 +3366,13 @@
       btn.textContent = '...';
 
       const fields = {
+        Title: document.getElementById('detail-title-input').value.trim(),
         Status: document.getElementById('detail-status').value,
         Context: document.getElementById('detail-context').value || null,
         Project: document.getElementById('detail-project').value || null,
-        Deadline: getDeadlineValue('detail-deadline', '#detail-asap-btn')
+        Deadline: getDeadlineValue('detail-deadline', '#detail-asap-btn'),
+        Description: document.getElementById('detail-description').value || null,
+        Recurrence: document.getElementById('detail-recurrence').value || null
       };
       await updateRecord(CONFIG.tables.tasks, currentDetailId, fields);
 
@@ -3267,7 +3386,7 @@
     async function deleteTask() {
       if (!currentDetailId) return;
       const id = currentDetailId;
-      const title = document.getElementById('detail-title-display').textContent;
+      const title = document.getElementById('detail-title-input').value;
       currentDetailId = null;
       closeModal('modal-detail');
 
@@ -3333,7 +3452,7 @@
     }
 
     function renderProjectTasks(projectName) {
-      const rawTasks = allTasks.filter(t => t.fields.Project === projectName);
+      const rawTasks = allTasks.filter(t => t.fields.Project === projectName && !t.fields.ParentTask);
       const tasks = sortTasks(filterTasks(rawTasks));
       const container = document.getElementById('pv-tasklist');
 
@@ -3387,6 +3506,7 @@
             return;
           }
           await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
+          await handleRecurrence(recordId);
         },
         undo: () => {
           el.classList.remove('checked');
@@ -3415,12 +3535,36 @@
       btn.textContent = '...';
 
       const selectedSwatch = document.querySelector('#pv-color-palette .color-swatch.selected');
+      const newName = document.getElementById('pv-name-input').value.trim();
       const fields = {
-        Name: document.getElementById('pv-name-input').value.trim(),
+        Name: newName,
         Status: document.getElementById('pv-status').value,
         Color: selectedSwatch ? selectedSwatch.dataset.color : null
       };
+
+      // Detect name change for cascading update
+      const project = projectsList.find(r => r.id === currentProjectViewId);
+      const oldName = project?.fields.Name;
+
       await updateRecord(CONFIG.tables.projects, currentProjectViewId, fields);
+
+      // Cascade: update all tasks referencing the old project name
+      if (oldName && newName && oldName !== newName) {
+        const tasksToUpdate = allTasks.filter(t => t.fields.Project === oldName);
+        for (let i = 0; i < tasksToUpdate.length; i += 10) {
+          const batch = tasksToUpdate.slice(i, i + 10);
+          const records = batch.map(t => ({ id: t.id, fields: { Project: newName } }));
+          if (!isOnline) {
+            batch.forEach(t => enqueueOffline({ method: 'PATCH', tableId: CONFIG.tables.tasks, recordId: t.id, fields: { Project: newName } }));
+          } else {
+            await fetch(apiUrl(CONFIG.tables.tasks), {
+              method: 'PATCH',
+              headers: headers(),
+              body: JSON.stringify({ records, typecast: true })
+            });
+          }
+        }
+      }
 
       btn.disabled = false;
       btn.textContent = 'Guardar';
@@ -3435,10 +3579,29 @@
     async function deleteProjectFromView() {
       if (!currentProjectViewId) return;
       const id = currentProjectViewId;
+      const project = projectsList.find(r => r.id === id);
+      const projectName = project?.fields.Name;
       closeProjectView();
 
       showToast('Proyecto eliminado', {
         commit: async () => {
+          // Cascade: clear Project field on all tasks of this project
+          if (projectName) {
+            const tasksToUpdate = allTasks.filter(t => t.fields.Project === projectName);
+            for (let i = 0; i < tasksToUpdate.length; i += 10) {
+              const batch = tasksToUpdate.slice(i, i + 10);
+              const records = batch.map(t => ({ id: t.id, fields: { Project: null } }));
+              if (!isOnline) {
+                batch.forEach(t => enqueueOffline({ method: 'PATCH', tableId: CONFIG.tables.tasks, recordId: t.id, fields: { Project: null } }));
+              } else {
+                await fetch(apiUrl(CONFIG.tables.tasks), {
+                  method: 'PATCH',
+                  headers: headers(),
+                  body: JSON.stringify({ records, typecast: true })
+                });
+              }
+            }
+          }
           if (!isOnline) {
             enqueueOffline({ method: 'DELETE', tableId: CONFIG.tables.projects, recordId: id });
             return;
@@ -3453,6 +3616,39 @@
       loadAll();
     }
 
+    // === RECURRENCE ===
+    function getNextDeadline(currentDeadline, recurrence) {
+      const base = (currentDeadline && currentDeadline !== ASAP_DATE)
+        ? new Date(currentDeadline + 'T00:00:00')
+        : new Date();
+      base.setHours(0, 0, 0, 0);
+      switch (recurrence) {
+        case 'Daily': base.setDate(base.getDate() + 1); break;
+        case 'Weekly': base.setDate(base.getDate() + 7); break;
+        case 'Monthly': base.setMonth(base.getMonth() + 1); break;
+        case 'Yearly': base.setFullYear(base.getFullYear() + 1); break;
+      }
+      return base.toISOString().split('T')[0];
+    }
+
+    async function handleRecurrence(recordId) {
+      const task = allTasks.find(t => t.id === recordId);
+      if (!task || !task.fields.Recurrence) return;
+      const f = task.fields;
+      const nextDeadline = getNextDeadline(f.Deadline, f.Recurrence);
+      const newFields = {
+        Title: f.Title,
+        Status: f.Status,
+        Recurrence: f.Recurrence,
+        Deadline: nextDeadline
+      };
+      if (f.Context) newFields.Context = f.Context;
+      if (f.Project) newFields.Project = f.Project;
+      if (f.Description) newFields.Description = f.Description;
+      if (f.ParentTask) newFields.ParentTask = f.ParentTask;
+      await createRecord(CONFIG.tables.tasks, newFields);
+    }
+
     // Complete task (checkbox in task lists)
     function completeTask(recordId, el) {
       el.classList.add('checked');
@@ -3464,6 +3660,26 @@
       showToast('Completada', {
         commit: async () => {
           await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
+          await handleRecurrence(recordId);
+        },
+        undo: () => {
+          el.classList.remove('checked');
+          item.classList.remove('completed');
+          item.style.pointerEvents = '';
+        }
+      });
+    }
+
+    // Complete inbox item (checkbox)
+    function completeInbox(recordId, el) {
+      el.classList.add('checked');
+      const item = el.closest('.task-item');
+      item.classList.add('completed');
+      item.style.pointerEvents = 'none';
+
+      showToast('Descartado', {
+        commit: async () => {
+          await updateRecord(CONFIG.tables.inbox, recordId, { Status: 'Processed' });
         },
         undo: () => {
           el.classList.remove('checked');
@@ -3596,7 +3812,7 @@
     ];
 
     function getRuletaTasks() {
-      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
+      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action' && !t.fields.ParentTask);
       const filtered = filterTasks(nextTasks);
       return filtered.filter(t => !ruletaExcluded.has(t.id));
     }
@@ -3715,7 +3931,7 @@
     }
 
     function renderRuletaList() {
-      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action');
+      const nextTasks = allTasks.filter(t => t.fields.Status === 'Next action' && !t.fields.ParentTask);
       const filtered = filterTasks(nextTasks);
       const container = document.getElementById('ruleta-tasklist');
 
@@ -3843,6 +4059,7 @@
             return;
           }
           await updateRecord(CONFIG.tables.tasks, id, { Status: 'Done' });
+          await handleRecurrence(id);
         },
         undo: () => {}
       });
@@ -4310,7 +4527,7 @@
     }
 
     function pickPomoTask() {
-      const nextTasks = allTasks.filter(r => r.fields.Status === 'Next action');
+      const nextTasks = allTasks.filter(r => r.fields.Status === 'Next action' && !r.fields.ParentTask);
       if (nextTasks.length === 0) return;
 
       const container = document.getElementById('pomo-task-list');
@@ -4607,6 +4824,76 @@
         btn.disabled = false;
         btn.textContent = 'Enviar';
       }
+    }
+
+    // === SUB-TASKS ===
+    function renderSubTasks(parentId) {
+      const container = document.getElementById('detail-subtasks');
+      const subtasks = allTasks.filter(t => t.fields.ParentTask === parentId);
+
+      let html = '<div class="field-label">Sub-tareas</div>';
+
+      if (subtasks.length > 0) {
+        html += subtasks.map(t => {
+          const f = t.fields;
+          return `
+            <div class="subtask-item">
+              <div class="subtask-checkbox" onclick="completeSubTask('${t.id}', this)"></div>
+              <span class="subtask-title">${escHtml(f.Title || '')}</span>
+            </div>`;
+        }).join('');
+      }
+
+      html += `
+        <div class="subtask-add-row">
+          <input type="text" id="subtask-input" placeholder="Nueva sub-tarea...">
+          <button class="btn-small" onclick="addSubTask()">+</button>
+        </div>`;
+
+      container.innerHTML = html;
+
+      setTimeout(() => {
+        const input = document.getElementById('subtask-input');
+        if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') addSubTask(); });
+      }, 50);
+    }
+
+    async function addSubTask() {
+      const input = document.getElementById('subtask-input');
+      const title = input.value.trim();
+      if (!title || !currentDetailId) return;
+
+      input.value = '';
+      const parentTask = allTasks.find(t => t.id === currentDetailId);
+      const fields = {
+        Title: title,
+        Status: 'Next action',
+        ParentTask: currentDetailId
+      };
+      if (parentTask?.fields.Project) fields.Project = parentTask.fields.Project;
+
+      await createRecord(CONFIG.tables.tasks, fields);
+      await loadAll();
+      renderSubTasks(currentDetailId);
+    }
+
+    function completeSubTask(recordId, el) {
+      el.classList.add('checked');
+      const titleEl = el.nextElementSibling;
+      titleEl.classList.add('done');
+      el.style.pointerEvents = 'none';
+
+      showToast('Sub-tarea completada', {
+        commit: async () => {
+          await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
+          await handleRecurrence(recordId);
+        },
+        undo: () => {
+          el.classList.remove('checked');
+          titleEl.classList.remove('done');
+          el.style.pointerEvents = '';
+        }
+      });
     }
 
     // === INIT ===
