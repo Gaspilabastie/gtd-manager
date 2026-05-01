@@ -1,4 +1,4 @@
-const CACHE = 'gtd-v5';
+const CACHE = 'gtd-v6';
 const ASSETS = [
   './index.html',
   './manifest.json',

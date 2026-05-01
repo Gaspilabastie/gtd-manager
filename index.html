@@ -2017,7 +2017,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.19.1</span>
+      <span class="header-date">v1.20</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -2376,6 +2376,7 @@
       <div class="subtask-section" id="detail-subtasks"></div>
       <div class="btn-row">
         <button class="btn-danger" onclick="deleteTask()">Eliminar</button>
+        <button class="btn-cancel" onclick="duplicateTask()">Duplicar</button>
         <button class="btn-add" id="btn-detail-save" onclick="saveTaskDetail()">Guardar</button>
       </div>
     </div>
@@ -2473,13 +2474,14 @@
     <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
       <div class="modal-label" id="feedback-detail-label">Feedback // Detalle</div>
       <h3 style="display:flex;align-items:center;gap:8px;">
-        <span class="feedback-type" id="feedback-detail-type">BUG</span>
+        <span class="feedback-type" id="feedback-detail-type" style="cursor:pointer;" onclick="toggleFeedbackType()" title="Click para cambiar Bug ↔ Feature">BUG</span>
         <span id="feedback-detail-number" style="font-family:var(--mono);font-size:12px;color:var(--text-secondary);"></span>
       </h3>
       <input type="text" id="feedback-detail-title" placeholder="Titulo">
       <textarea id="feedback-detail-body" placeholder="Descripcion" style="min-height:140px;"></textarea>
       <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
         <button class="btn-cancel" onclick="closeModal('modal-feedback-detail')">Cancelar</button>
+        <button class="btn-danger" id="btn-delete-feedback" onclick="deleteFeedbackIssue()">Borrar</button>
         <button class="btn-cancel" id="btn-resolve-feedback" onclick="resolveFeedbackIssue()" style="border-color:#27ae60;color:#27ae60;">Resolver</button>
         <button class="btn-add" id="btn-save-feedback-detail" onclick="saveFeedbackDetail()">Guardar</button>
       </div>
@@ -3161,10 +3163,13 @@
       inboxItems = inbox;
       const topLevelTasks = tasks.filter(t => !t.fields.ParentTask);
       const activeProjects = projects.filter(r => r.fields.Status === 'Active');
+      // Sort: manual Order first (drag&drop), then alphabetical for projects
+      // without explicit ordering (#18). All-default → fully alphabetical.
       activeProjects.sort((a, b) => {
         const oa = a.fields.Order != null ? a.fields.Order : 9999;
         const ob = b.fields.Order != null ? b.fields.Order : 9999;
-        return oa - ob;
+        if (oa !== ob) return oa - ob;
+        return (a.fields.Name || '').localeCompare(b.fields.Name || '', 'es');
       });
       const nextTasks = topLevelTasks.filter(r => r.fields.Status === 'Next action');
       const waitingTasks = topLevelTasks.filter(r => r.fields.Status === 'Waiting');
@@ -3208,11 +3213,15 @@
     }
 
     function populateProjectSelects() {
+      // Alphabetical order for project dropdowns (#18)
+      const sortedProjects = [...projectsList].sort((a, b) =>
+        (a.fields.Name || '').localeCompare(b.fields.Name || '', 'es')
+      );
       ['input-project', 'process-project', 'detail-project'].forEach(id => {
         const sel = document.getElementById(id);
         const val = sel.value;
         sel.innerHTML = '<option value="">Sin proyecto</option>';
-        projectsList.forEach(p => {
+        sortedProjects.forEach(p => {
           const name = p.fields.Name || '';
           sel.innerHTML += `<option value="${escHtml(name)}">${escHtml(name)}</option>`;
         });
@@ -3276,8 +3285,15 @@
     let pendingTimer = null;
 
     function showToast(text, action) {
-      // Cancel any previous pending action
+      // If there's a previous pending action, commit it now (fire-and-forget)
+      // before starting the new one. Prevents losing the first commit when
+      // the user triggers a second toast within the undo window.
       if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+      if (pendingAction && pendingAction.commit) {
+        const prev = pendingAction;
+        pendingAction = null;
+        Promise.resolve(prev.commit()).catch(() => {});
+      }
 
       pendingAction = action;
       const toast = document.getElementById('toast');
@@ -3439,6 +3455,27 @@
       loadAll();
     }
 
+    async function duplicateTask() {
+      if (!currentDetailId) return;
+      const original = allTasks.find(t => t.id === currentDetailId);
+      if (!original) return;
+      const f = original.fields;
+      const newFields = {
+        Title: (document.getElementById('detail-title-input').value.trim() || f.Title || '') + ' (copia)',
+        Status: f.Status || 'Next action'
+      };
+      if (f.Context) newFields.Context = f.Context;
+      if (f.Project) newFields.Project = f.Project;
+      if (f.Deadline) newFields.Deadline = f.Deadline;
+      if (f.Description) newFields.Description = f.Description;
+      if (f.Recurrence) newFields.Recurrence = f.Recurrence;
+      if (f.ParentTask) newFields.ParentTask = f.ParentTask;
+      currentDetailId = null;
+      closeModal('modal-detail');
+      await createRecord(CONFIG.tables.tasks, newFields);
+      loadAll();
+    }
+
     async function deleteTask() {
       if (!currentDetailId) return;
       const id = currentDetailId;
@@ -3561,8 +3598,7 @@
             enqueueOffline({ method: 'PATCH', tableId: CONFIG.tables.tasks, recordId, fields: { Status: 'Done' } });
             return;
           }
-          await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
-          await handleRecurrence(recordId);
+          await commitTaskCompletion(recordId);
         },
         undo: () => {
           el.classList.remove('checked');
@@ -3705,6 +3741,16 @@
       await createRecord(CONFIG.tables.tasks, newFields);
     }
 
+    // Complete a parent task and cascade to its open sub-tasks (#15)
+    async function commitTaskCompletion(recordId) {
+      await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
+      await handleRecurrence(recordId);
+      const openSubtasks = allTasks.filter(t => t.fields.ParentTask === recordId && t.fields.Status !== 'Done');
+      for (const st of openSubtasks) {
+        await updateRecord(CONFIG.tables.tasks, st.id, { Status: 'Done' });
+      }
+    }
+
     // Complete task (checkbox in task lists)
     function completeTask(recordId, el) {
       el.classList.add('checked');
@@ -3714,10 +3760,7 @@
       const title = item.querySelector('.task-title')?.textContent || 'Tarea';
 
       showToast('Completada', {
-        commit: async () => {
-          await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
-          await handleRecurrence(recordId);
-        },
+        commit: () => commitTaskCompletion(recordId),
         undo: () => {
           el.classList.remove('checked');
           item.classList.remove('completed');
@@ -4114,8 +4157,7 @@
             enqueueOffline({ method: 'PATCH', tableId: CONFIG.tables.tasks, recordId: id, fields: { Status: 'Done' } });
             return;
           }
-          await updateRecord(CONFIG.tables.tasks, id, { Status: 'Done' });
-          await handleRecurrence(id);
+          await commitTaskCompletion(id);
         },
         undo: () => {}
       });
@@ -4454,10 +4496,14 @@
     function pomoTickUpdate() {
       const elapsed = Math.floor((Date.now() - pomoState.startedAt) / 1000);
       pomoState.remaining = Math.max(0, pomoState.remainingAtStart - elapsed);
-      if (pomoState.remaining <= 0) {
-        onPhaseComplete();
-      }
       updatePomoDisplay();
+      if (pomoState.remaining <= 0 && pomoState.interval) {
+        // Stop the interval immediately and let the user see 00:00 briefly
+        // before advancing phase
+        clearInterval(pomoState.interval);
+        pomoState.interval = null;
+        setTimeout(() => onPhaseComplete(), 600);
+      }
     }
 
     function pomoCatchUp() {
@@ -4859,6 +4905,18 @@
     }
 
     let currentFeedbackIssue = null;
+    let currentFeedbackType = 'Bug'; // tracks pending type change before save
+
+    function setFeedbackTypeDisplay(type) {
+      currentFeedbackType = type;
+      const typeEl = document.getElementById('feedback-detail-type');
+      typeEl.textContent = type;
+      typeEl.className = 'feedback-type ' + type.toLowerCase();
+    }
+
+    function toggleFeedbackType() {
+      setFeedbackTypeDisplay(currentFeedbackType === 'Bug' ? 'Feature' : 'Bug');
+    }
 
     function openFeedbackDetail(issueNumber) {
       const issue = feedbackItems.find(i => i.number === issueNumber);
@@ -4866,10 +4924,7 @@
       currentFeedbackIssue = issue;
       const labels = (issue.labels || []).map(l => typeof l === 'string' ? l : l.name);
       const isBug = labels.includes('bug');
-      const type = isBug ? 'Bug' : 'Feature';
-      const typeEl = document.getElementById('feedback-detail-type');
-      typeEl.textContent = type;
-      typeEl.className = 'feedback-type ' + type.toLowerCase();
+      setFeedbackTypeDisplay(isBug ? 'Bug' : 'Feature');
       document.getElementById('feedback-detail-number').textContent = '#' + issue.number;
       document.getElementById('feedback-detail-title').value = issue.title || '';
       document.getElementById('feedback-detail-body').value = issue.body || '';
@@ -4886,10 +4941,16 @@
       btn.disabled = true;
       btn.textContent = 'Guardando...';
       try {
+        // Preserve any non-(bug|feature) labels and apply current type choice
+        const preserved = (currentFeedbackIssue.labels || [])
+          .map(l => typeof l === 'string' ? l : l.name)
+          .filter(n => n !== 'bug' && n !== 'feature');
+        const newLabels = [...preserved, currentFeedbackType.toLowerCase()];
+        if (!newLabels.includes('feedback')) newLabels.push('feedback');
         const res = await fetch(`${GH_API}/issues/${currentFeedbackIssue.number}`, {
           method: 'PATCH',
           headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, body })
+          body: JSON.stringify({ title, body, labels: newLabels })
         });
         if (!res.ok) throw new Error(res.status);
         showToast('Guardado');
@@ -4900,6 +4961,30 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'Guardar';
+      }
+    }
+
+    async function deleteFeedbackIssue() {
+      if (!currentFeedbackIssue) return;
+      if (!isOnline) { showToast('Necesita conexion'); return; }
+      const btn = document.getElementById('btn-delete-feedback');
+      btn.disabled = true;
+      btn.textContent = 'Borrando...';
+      try {
+        const res = await fetch(`${GH_API}/issues/${currentFeedbackIssue.number}`, {
+          method: 'PATCH',
+          headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: 'closed', state_reason: 'not_planned' })
+        });
+        if (!res.ok) throw new Error(res.status);
+        showToast('Borrado');
+        closeModal('modal-feedback-detail');
+        loadFeedback();
+      } catch (e) {
+        showToast('Error al borrar');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Borrar';
       }
     }
 
@@ -5016,10 +5101,7 @@
       el.style.pointerEvents = 'none';
 
       showToast('Sub-tarea completada', {
-        commit: async () => {
-          await updateRecord(CONFIG.tables.tasks, recordId, { Status: 'Done' });
-          await handleRecurrence(recordId);
-        },
+        commit: () => commitTaskCompletion(recordId),
         undo: () => {
           el.classList.remove('checked');
           titleEl.classList.remove('done');
