@@ -242,6 +242,58 @@
       border-right: 1px solid var(--border-light);
     }
 
+    .task-expand-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      margin-right: 4px;
+      font-size: 9px;
+      transition: transform 0.15s;
+      flex-shrink: 0;
+    }
+
+    .task-expand-arrow.expanded {
+      transform: rotate(90deg);
+    }
+
+    .task-item.subtask {
+      padding-left: 24px;
+      background: rgba(0, 240, 208, 0.04);
+    }
+
+    .task-item.subtask .task-number {
+      color: var(--text-secondary);
+      font-size: 10px;
+    }
+
+    .task-item.subtask .task-title {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    .task-item.done-recurring {
+      opacity: 0.5;
+    }
+
+    .task-item.done-recurring .task-title {
+      text-decoration: line-through;
+    }
+
+    .task-item.done-recurring .task-checkbox {
+      background: var(--black);
+    }
+
+    .task-item.done-recurring .task-checkbox::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+    }
+
     .task-checkbox {
       width: 18px;
       height: 18px;
@@ -2017,7 +2069,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.20</span>
+      <span class="header-date">v1.21</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -3072,12 +3124,42 @@
       return labels[r] || '';
     }
 
+    // Tasks with their sub-tasks expanded inline (#15 part 3). In-memory only.
+    const expandedTasks = new Set();
+
+    function toggleExpand(taskId) {
+      if (expandedTasks.has(taskId)) expandedTasks.delete(taskId);
+      else expandedTasks.add(taskId);
+      loadAll();
+    }
+
+    // Inject open sub-tasks immediately after their parent if expanded.
+    function expandSubtasks(tasks) {
+      if (expandedTasks.size === 0) return tasks;
+      const result = [];
+      for (const t of tasks) {
+        result.push(t);
+        if (expandedTasks.has(t.id)) {
+          const subs = allTasks.filter(s => s.fields.ParentTask === t.id && s.fields.Status !== 'Done');
+          for (const sub of subs) result.push({ ...sub, _isSubtask: true });
+        }
+      }
+      return result;
+    }
+
     function renderTaskItem(record, index) {
       const f = record.fields;
+      const isSubtask = !!record._isSubtask;
+      const isDoneRecurring = f.Status === 'Done' && f.Recurrence;
       const isWaiting = f.Status === 'Waiting';
-      const checkAction = isWaiting
-        ? `event.stopPropagation(); resolveWaiting('${record.id}')`
-        : `event.stopPropagation(); completeTask('${record.id}', this)`;
+      let checkAction;
+      if (isDoneRecurring) {
+        checkAction = 'event.stopPropagation();'; // no-op, already done
+      } else if (isWaiting) {
+        checkAction = `event.stopPropagation(); resolveWaiting('${record.id}')`;
+      } else {
+        checkAction = `event.stopPropagation(); completeTask('${record.id}', this)`;
+      }
       let meta = '';
       if (f.Project) {
         const pColor = getProjectColor(f.Project);
@@ -3089,16 +3171,25 @@
       const dl = formatDeadline(f.Deadline);
       if (dl) meta += `<span class="tag-deadline ${dl.cls}">${dl.text}</span>`;
       if (f.Recurrence) meta += `<span class="tag tag-recurrence">${recurrenceLabel(f.Recurrence)}</span>`;
-      const subtaskCount = allTasks.filter(t => t.fields.ParentTask === record.id).length;
+      const subtaskCount = isSubtask ? 0 : allTasks.filter(t => t.fields.ParentTask === record.id && t.fields.Status !== 'Done').length;
       if (subtaskCount > 0) meta += `<span class="tag tag-subtasks">${subtaskCount} SUB</span>`;
+      const expanded = expandedTasks.has(record.id);
+      const expandArrow = subtaskCount > 0
+        ? `<span class="task-expand-arrow ${expanded ? 'expanded' : ''}" onclick="event.stopPropagation(); toggleExpand('${record.id}')">▶</span>`
+        : '';
+      const itemClasses = ['task-item'];
+      if (isSubtask) itemClasses.push('subtask');
+      if (isDoneRecurring) itemClasses.push('done-recurring');
+      const numberText = isSubtask ? '↳' : String(index + 1).padStart(2, '0');
+      const onclickAction = isDoneRecurring ? '' : `onclick="openTaskDetail('${record.id}')"`;
       return `
-        <div class="task-item" data-id="${record.id}" onclick="openTaskDetail('${record.id}')">
-          <div class="task-number">${String(index + 1).padStart(2, '0')}</div>
+        <div class="${itemClasses.join(' ')}" data-id="${record.id}" ${onclickAction}>
+          <div class="task-number">${numberText}</div>
           <div class="task-status">
-            <div class="task-checkbox" onclick="${checkAction}"></div>
+            <div class="task-checkbox${isDoneRecurring ? ' checked' : ''}" onclick="${checkAction}"></div>
           </div>
           <div class="task-content">
-            <div class="task-title">${escHtml(f.Title || '')}</div>
+            <div class="task-title">${expandArrow}${escHtml(f.Title || '')}</div>
             ${meta ? `<div class="task-meta">${meta}</div>` : ''}
           </div>
         </div>`;
@@ -3140,13 +3231,38 @@
       return d.innerHTML;
     }
 
+    // Recently-completed recurring tasks (#15 part 2). Module-level cache.
+    let doneRecurringTasks = [];
+
+    // Append the most recent Done recurring task per title at the end of the
+    // list so the user sees them struck-through until the next instance is
+    // also completed. Only shown in the Next actions list.
+    function appendDoneRecurring(tasks) {
+      if (!doneRecurringTasks.length) return tasks;
+      // Group by Title, keep the latest by Deadline
+      const latest = {};
+      for (const t of doneRecurringTasks) {
+        const key = t.fields.Title || '';
+        const ex = latest[key];
+        if (!ex || new Date(t.fields.Deadline || 0) > new Date(ex.fields.Deadline || 0)) {
+          latest[key] = t;
+        }
+      }
+      return [...tasks, ...Object.values(latest)];
+    }
+
     // === LOAD DATA ===
     async function loadAll() {
-      const [inbox, tasks, projects] = await Promise.all([
+      const [inbox, tasks, projects, doneRec] = await Promise.all([
         fetchRecords(CONFIG.tables.inbox, "{Status} = 'New'"),
         fetchRecords(CONFIG.tables.tasks, "{Status} != 'Done'"),
-        fetchRecords(CONFIG.tables.projects)
+        fetchRecords(CONFIG.tables.projects),
+        fetchRecords(
+          CONFIG.tables.tasks,
+          "AND({Status} = 'Done', {Recurrence}, IS_AFTER({Deadline}, DATEADD(TODAY(), -30, 'days')))"
+        ).catch(() => [])
       ]);
+      doneRecurringTasks = doneRec || [];
 
       // Sort by Order field (nulls last)
       inbox.sort((a, b) => {
@@ -3186,12 +3302,12 @@
 
       // Inbox
       renderList('inbox', inbox, renderInboxItem);
-      // Next actions (apply filter)
-      renderList('next', sortTasks(filterTasks(nextTasks)), renderTaskItem);
+      // Next actions (apply filter, expand sub-tasks if needed, append done-recurring at bottom)
+      renderList('next', appendDoneRecurring(expandSubtasks(sortTasks(filterTasks(nextTasks)))), renderTaskItem);
       // Waiting
-      renderList('waiting', sortTasks(filterTasks(waitingTasks)), renderTaskItem);
+      renderList('waiting', expandSubtasks(sortTasks(filterTasks(waitingTasks))), renderTaskItem);
       // Someday
-      renderList('someday', sortTasks(filterTasks(somedayTasks)), renderTaskItem);
+      renderList('someday', expandSubtasks(sortTasks(filterTasks(somedayTasks))), renderTaskItem);
       // Projects
       renderList('projects', activeProjects, renderProjectItem);
       // Refresh project detail view if open
@@ -3274,9 +3390,15 @@
       if (records.length === 0) {
         list.innerHTML = '<div class="empty-state">Sin items</div>';
       } else {
-        list.innerHTML = records.map((r, i) => renderFn(r, i)).join('');
+        // Index only counts top-level items, not injected sub-tasks
+        let idx = 0;
+        list.innerHTML = records.map(r =>
+          r._isSubtask ? renderFn(r, -1) : renderFn(r, idx++)
+        ).join('');
       }
-      if (count) count.textContent = `${String(records.length).padStart(2, '0')} items`;
+      // Count top-level only (subtasks injected inline are not separate items)
+      const topLevel = records.filter(r => !r._isSubtask).length;
+      if (count) count.textContent = `${String(topLevel).padStart(2, '0')} items`;
     }
 
     // === UNDO SYSTEM ===
