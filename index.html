@@ -1417,7 +1417,6 @@
       letter-spacing: 1px;
       padding: 8px 16px;
       cursor: pointer;
-      display: none;
     }
 
     .ruleta-complete-btn:active {
@@ -2010,7 +2009,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.18.1</span>
+      <span class="header-date">v1.19</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -2504,14 +2503,45 @@
       tables: {
         inbox: 'tblXB8wC3LkT2UcpO',
         tasks: 'tbl6fwNx6OPeBSWX4',
-        projects: 'tblKGlGqf22tgHT7x',
-        feedback: 'tbl3ADNbx97Mr5SHM'
+        projects: 'tblKGlGqf22tgHT7x'
       }
     };
 
+    // === GITHUB (feedback backend) ===
+    const GH_REPO = 'Gaspilabastie/gtd-manager';
+    const GH_API = `https://api.github.com/repos/${GH_REPO}`;
+
+    function getGitHubToken() {
+      let token = localStorage.getItem('github_token');
+      if (!token) {
+        token = prompt('GitHub Personal Access Token (Issues: read & write en gtd-manager):');
+        if (token) localStorage.setItem('github_token', token.trim());
+      }
+      return token;
+    }
+
+    function ghHeaders() {
+      return {
+        'Authorization': `Bearer ${getGitHubToken()}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      };
+    }
+
     function getContexts() {
       const saved = localStorage.getItem('gtd-contexts');
-      return saved ? JSON.parse(saved) : DEFAULT_CONTEXTS;
+      if (saved === null) {
+        // First-time bootstrap: persist defaults so an explicit empty list
+        // (user removed all) is respected on future reads.
+        localStorage.setItem('gtd-contexts', JSON.stringify(DEFAULT_CONTEXTS));
+        return [...DEFAULT_CONTEXTS];
+      }
+      try {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
     }
 
     function saveContexts(list) {
@@ -4764,9 +4794,16 @@
     async function loadFeedback() {
       const listEl = document.getElementById('feedback-list');
       listEl.innerHTML = '<div class="feedback-empty">Cargando...</div>';
+      if (!getGitHubToken()) {
+        listEl.innerHTML = '<div class="feedback-empty">Falta token de GitHub</div>';
+        return;
+      }
       try {
-        feedbackItems = await fetchRecords(CONFIG.tables.feedback);
-        feedbackItems.sort((a, b) => new Date(b.fields.Created || 0) - new Date(a.fields.Created || 0));
+        const res = await fetch(`${GH_API}/issues?state=open&labels=feedback&per_page=100`, { headers: ghHeaders() });
+        if (!res.ok) throw new Error(res.status);
+        const issues = await res.json();
+        // GitHub returns PRs as issues too — exclude them
+        feedbackItems = issues.filter(i => !i.pull_request);
         renderFeedbackList();
       } catch (e) {
         listEl.innerHTML = '<div class="feedback-empty">Error al cargar</div>';
@@ -4775,26 +4812,21 @@
 
     function renderFeedbackList() {
       const listEl = document.getElementById('feedback-list');
-      const pending = feedbackItems.filter(r => {
-        const s = r.fields.Status || 'New';
-        return s !== 'Done' && s !== 'Rejected';
-      });
-      if (pending.length === 0) {
+      if (feedbackItems.length === 0) {
         listEl.innerHTML = '<div class="feedback-empty">Sin feedback pendiente</div>';
         return;
       }
-      listEl.innerHTML = pending.map(r => {
-        const f = r.fields;
-        const typeCls = (f.Type || '').toLowerCase();
-        const statusRaw = f.Status || 'New';
-        let statusCls = '';
-        if (statusRaw === 'In Progress') statusCls = 'in-progress';
+      listEl.innerHTML = feedbackItems.map(i => {
+        const labels = (i.labels || []).map(l => typeof l === 'string' ? l : l.name);
+        const isBug = labels.includes('bug');
+        const type = isBug ? 'Bug' : 'Feature';
+        const typeCls = type.toLowerCase();
         return `
           <div class="feedback-item">
-            <span class="feedback-type ${typeCls}">${escHtml(f.Type || '?')}</span>
+            <span class="feedback-type ${typeCls}">${type}</span>
             <div class="feedback-info">
-              <div class="feedback-title">${escHtml(f.Title || 'Sin titulo')}</div>
-              <div class="feedback-status ${statusCls}">${escHtml(statusRaw)}</div>
+              <div class="feedback-title">${escHtml(i.title || 'Sin titulo')}</div>
+              <div class="feedback-status">#${i.number}</div>
             </div>
           </div>`;
       }).join('');
@@ -4803,20 +4835,22 @@
     async function submitFeedback() {
       const title = document.getElementById('feedback-title').value.trim();
       if (!title) return;
+      if (!isOnline) { showToast('Necesita conexion'); return; }
+      if (!getGitHubToken()) { showToast('Falta token de GitHub'); return; }
       const type = document.getElementById('feedback-type').value;
       const desc = document.getElementById('feedback-desc').value.trim();
       const btn = document.getElementById('btn-send-feedback');
       btn.disabled = true;
       btn.textContent = 'Enviando...';
       try {
-        const fields = {
-          Title: title,
-          Type: type,
-          Status: 'New',
-          Created: new Date().toISOString()
-        };
-        if (desc) fields.Description = desc;
-        await createRecord(CONFIG.tables.feedback, fields);
+        const labels = ['feedback', type.toLowerCase()];
+        const body = (desc ? desc + '\n\n' : '') + '_Sent from GTD Manager app_';
+        const res = await fetch(`${GH_API}/issues`, {
+          method: 'POST',
+          headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, body, labels })
+        });
+        if (!res.ok) throw new Error(res.status);
         document.getElementById('feedback-title').value = '';
         document.getElementById('feedback-desc').value = '';
         showToast('Feedback enviado');

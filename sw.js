@@ -1,4 +1,4 @@
-const CACHE = 'gtd-v3';
+const CACHE = 'gtd-v4';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -28,8 +28,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Skip Airtable API calls — handled by app-level offline logic
-  if (url.hostname === 'api.airtable.com') return;
+  // Skip Airtable & GitHub API calls — handled by app-level offline logic
+  if (url.hostname === 'api.airtable.com' || url.hostname === 'api.github.com') return;
 
   // Google Fonts: cache-first (they're immutable)
   if (FONT_ORIGINS.some(o => e.request.url.startsWith(o))) {
