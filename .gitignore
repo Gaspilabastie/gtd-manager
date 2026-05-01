@@ -6,6 +6,7 @@ netlify.toml
 # Local dev secrets
 .env.js
 .airtable_token
+.github_token
 
 # Dev/test artifacts
 node_modules/

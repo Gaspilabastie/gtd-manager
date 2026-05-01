@@ -1044,6 +1044,11 @@
       gap: 8px;
       padding: 10px 0;
       border-bottom: 1px solid var(--border-light);
+      cursor: pointer;
+    }
+
+    .feedback-item:hover .feedback-title {
+      color: var(--accent-dark, #00b8a0);
     }
 
     .feedback-item:last-child {
@@ -1059,6 +1064,9 @@
       padding: 2px 6px;
       flex-shrink: 0;
       margin-top: 2px;
+      width: 56px;
+      text-align: center;
+      box-sizing: border-box;
     }
 
     .feedback-type.bug {
@@ -2009,7 +2017,7 @@
     </div>
     <div class="header-right">
       <span class="header-date" id="header-date"></span>
-      <span class="header-date">v1.19</span>
+      <span class="header-date">v1.19.1</span>
       <button class="header-settings" onclick="openWeeklyReview()">[REV]</button>
       <button class="header-settings" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -2456,6 +2464,24 @@
       <div class="field-label">Historial</div>
       <div class="feedback-list" id="feedback-list">
         <div class="feedback-empty">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Detail Modal -->
+  <div class="modal-overlay" id="modal-feedback-detail" onclick="closeModal('modal-feedback-detail', event)">
+    <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+      <div class="modal-label" id="feedback-detail-label">Feedback // Detalle</div>
+      <h3 style="display:flex;align-items:center;gap:8px;">
+        <span class="feedback-type" id="feedback-detail-type">BUG</span>
+        <span id="feedback-detail-number" style="font-family:var(--mono);font-size:12px;color:var(--text-secondary);"></span>
+      </h3>
+      <input type="text" id="feedback-detail-title" placeholder="Titulo">
+      <textarea id="feedback-detail-body" placeholder="Descripcion" style="min-height:140px;"></textarea>
+      <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
+        <button class="btn-cancel" onclick="closeModal('modal-feedback-detail')">Cancelar</button>
+        <button class="btn-cancel" id="btn-resolve-feedback" onclick="resolveFeedbackIssue()" style="border-color:#27ae60;color:#27ae60;">Resolver</button>
+        <button class="btn-add" id="btn-save-feedback-detail" onclick="saveFeedbackDetail()">Guardar</button>
       </div>
     </div>
   </div>
@@ -4822,7 +4848,7 @@
         const type = isBug ? 'Bug' : 'Feature';
         const typeCls = type.toLowerCase();
         return `
-          <div class="feedback-item">
+          <div class="feedback-item" onclick="openFeedbackDetail(${i.number})">
             <span class="feedback-type ${typeCls}">${type}</span>
             <div class="feedback-info">
               <div class="feedback-title">${escHtml(i.title || 'Sin titulo')}</div>
@@ -4830,6 +4856,75 @@
             </div>
           </div>`;
       }).join('');
+    }
+
+    let currentFeedbackIssue = null;
+
+    function openFeedbackDetail(issueNumber) {
+      const issue = feedbackItems.find(i => i.number === issueNumber);
+      if (!issue) return;
+      currentFeedbackIssue = issue;
+      const labels = (issue.labels || []).map(l => typeof l === 'string' ? l : l.name);
+      const isBug = labels.includes('bug');
+      const type = isBug ? 'Bug' : 'Feature';
+      const typeEl = document.getElementById('feedback-detail-type');
+      typeEl.textContent = type;
+      typeEl.className = 'feedback-type ' + type.toLowerCase();
+      document.getElementById('feedback-detail-number').textContent = '#' + issue.number;
+      document.getElementById('feedback-detail-title').value = issue.title || '';
+      document.getElementById('feedback-detail-body').value = issue.body || '';
+      document.getElementById('modal-feedback-detail').classList.add('open');
+    }
+
+    async function saveFeedbackDetail() {
+      if (!currentFeedbackIssue) return;
+      const title = document.getElementById('feedback-detail-title').value.trim();
+      const body = document.getElementById('feedback-detail-body').value;
+      if (!title) { showToast('Titulo vacio'); return; }
+      if (!isOnline) { showToast('Necesita conexion'); return; }
+      const btn = document.getElementById('btn-save-feedback-detail');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+      try {
+        const res = await fetch(`${GH_API}/issues/${currentFeedbackIssue.number}`, {
+          method: 'PATCH',
+          headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, body })
+        });
+        if (!res.ok) throw new Error(res.status);
+        showToast('Guardado');
+        closeModal('modal-feedback-detail');
+        loadFeedback();
+      } catch (e) {
+        showToast('Error al guardar');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    }
+
+    async function resolveFeedbackIssue() {
+      if (!currentFeedbackIssue) return;
+      if (!isOnline) { showToast('Necesita conexion'); return; }
+      const btn = document.getElementById('btn-resolve-feedback');
+      btn.disabled = true;
+      btn.textContent = 'Resolviendo...';
+      try {
+        const res = await fetch(`${GH_API}/issues/${currentFeedbackIssue.number}`, {
+          method: 'PATCH',
+          headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: 'closed', state_reason: 'completed' })
+        });
+        if (!res.ok) throw new Error(res.status);
+        showToast('Resuelto');
+        closeModal('modal-feedback-detail');
+        loadFeedback();
+      } catch (e) {
+        showToast('Error al resolver');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Resolver';
+      }
     }
 
     async function submitFeedback() {
